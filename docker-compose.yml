@@ -1,0 +1,99 @@
+services:
+
+  jenkins:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jenkins
+    ports:
+      - "8080:8080"
+      - "50000:50000"
+    restart: unless-stopped
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - ./jenkins/init.groovy.d:/var/jenkins_home/init.groovy.d
+    environment:
+      - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
+
+  jenkins-init:
+    image: python:3.11-slim
+    depends_on:
+      - jenkins
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - ./:/workspace
+    environment:
+      - JENKINS_URL=http://jenkins:8080
+      - JENKINS_USER=admin
+    command: >
+      bash -c "
+      dpkg --configure -a &&
+      apt-get update && apt-get install -y curl &&
+      pip install --quiet requests &&
+      echo 'Waiting for Jenkins...' &&
+      until curl -s http://jenkins:8080/login > /dev/null; do sleep 5; done &&
+      echo 'Jenkins is ready' &&
+      python3 /workspace/jenkins_init_jobs_fixed.py
+      "
+    restart: on-failure
+
+  fastapi:
+    build:
+      context: ./fast_api
+    container_name: fastapi
+    ports:
+      - "8000:8000"
+    depends_on:
+      - jenkins
+    volumes:
+      - jenkins_data:/var/jenkins_home
+      - ./:/workspace
+    environment:
+      - JENKINS_URL=http://jenkins:8080
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: unless-stopped
+    entrypoint: sh -c "ollama serve & sleep 15 && ollama pull mistral && wait"
+
+  agent:
+    build:
+      context: .
+      dockerfile: adk_agent/Dockerfile
+    container_name: agent
+    ports:
+      - "8100:8100"
+    depends_on:
+      - fastapi
+      - ollama
+    environment:
+      - FASTAPI_URL=http://fastapi:8000
+      - OLLAMA_URL=http://ollama:11434
+    restart: unless-stopped
+    volumes:
+    - ./:/workspace
+  streamlit:
+    build:
+      context: ./streamlit
+    container_name: streamlit
+    ports:
+      - "8501:8501"
+    depends_on:
+      - agent
+      - fastapi
+    environment:
+      - AGENT_URL=http://agent:8100/query
+      - FASTAPI_URL=http://fastapi:8000
+    restart: unless-stopped
+
+volumes:
+  jenkins_data:
+  ollama_data:
+  agent:
+  fastapi:

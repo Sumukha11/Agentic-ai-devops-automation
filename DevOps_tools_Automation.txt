@@ -1,0 +1,145 @@
+############################
+# 1. NAVIGATION & FILE OPS
+############################
+
+cd /mnt/c/Users/rampr/OneDrive/Desktop/IITP-3rd-sem-project-Agentic_AI_DevOps_Tools/
+# Move into project directory
+
+ll
+# List files with details (permissions, size, timestamps)
+
+vi .env
+# Open .env file in Vim editor
+
+
+############################
+# 2. DOCKER - CONTAINERS
+############################
+
+docker container ls
+# Show running containers
+
+docker container ls -a
+# Show all containers (running + stopped)
+
+docker container start <container_id>
+# Start a stopped container
+
+docker exec -it jenkins bash
+# Enter Jenkins container with interactive bash shell
+
+docker logs jenkins
+# View logs of Jenkins container
+
+
+############################
+# 3. DOCKER COMPOSE
+############################
+
+docker-compose up -d
+# Start services in background (detached mode)
+
+docker-compose down
+# Stop and remove containers + network
+
+docker-compose down -v
+# Stop and remove containers + network + volumes (wipes data)
+
+docker-compose build
+# Build Docker images from Dockerfile
+
+docker-compose build --no-cache
+# Rebuild images from scratch (no cache)
+
+
+############################
+# 4. DOCKERFILE COMMANDS
+############################
+
+apt update
+# Update package list inside container
+
+apt install -y python3 python3-pip python3-venv
+# Install Python, pip, and virtual environment support
+
+apt clean
+# Clean package cache to reduce image size
+
+python3 -m venv /opt/venv
+# Create virtual environment at /opt/venv
+
+/opt/venv/bin/pip install --upgrade pip
+# Upgrade pip inside virtual environment
+
+/opt/venv/bin/pip install requests yfinance
+# Install Python packages inside venv
+
+chown -R jenkins:jenkins /opt/venv
+# Give Jenkins user ownership of virtual environment
+
+
+############################
+# 5. ERROR CASES (LEARNING)
+############################
+
+pip3 install requests
+# ❌ Fails due to PEP 668 → system Python is externally managed
+
+apt-get install python3
+# ❌ May fail due to dpkg lock (another process using apt)
+
+apt install -y python3 python3-pip
+# ❌ Fails if not root (permission denied)
+
+sudo su
+sudo -i
+# ❌ Not available in Jenkins container
+
+
+############################
+# 6. NETWORK & TESTING
+############################
+
+ping 8.8.8.8
+# Test internet connectivity (may not be installed)
+
+python3 -c "import requests; print(requests.get('https://google.com').status_code)"
+# Test HTTP request → should return 200
+
+
+############################
+# 7. ENV VARIABLES
+############################
+
+export $(grep -v '^#' .env | xargs)
+# Load variables from .env into shell
+
+echo $JENKINS_USER
+# Verify environment variable
+
+
+############################
+# 8. JENKINS API (CURL)
+############################
+
+curl -u $JENKINS_USER:$JENKINS_TOKEN http://jenkins:8080/api/json
+# ❌ Fails if hostname not resolvable
+
+curl -u $JENKINS_USER:$JENKINS_TOKEN http://localhost:8080/api/json
+# Access Jenkins API using localhost
+
+curl -u username:token http://localhost:8080/api/json
+# Direct authentication test
+
+
+############################
+# 9. QUICK FLOW SUMMARY
+############################
+
+# Build → Run → Enter → Test → Fix → Rebuild
+
+docker-compose build --no-cache
+docker-compose up -d
+docker exec -it jenkins bash
+docker logs jenkins
+curl -u $JENKINS_USER:$JENKINS_TOKEN http://localhost:8080/api/json
