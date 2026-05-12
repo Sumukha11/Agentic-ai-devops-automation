@@ -17,7 +17,7 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-prompt = st.chat_input("Try: list jobs, run api check, trigger all jobs")
+prompt = st.chat_input("Try: list jobs, run api check, trigger api health check")
 
 if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -56,37 +56,7 @@ if prompt:
                         for job in jobs:
                             reply += f"- `{job}`\n"
 
-                    elif "ai_summary" in result:
-                        job_name = result.get("job", "Unknown Job")
-                        final_status = result.get("final_status", "UNKNOWN")
-                        build_number = result.get("build_number", "N/A")
-
-                        status_emoji = "✅"
-                        if final_status == "FAILURE":
-                            status_emoji = "❌"
-                        elif final_status == "TIMEOUT":
-                            status_emoji = "⚠️"
-
-                        summary = result.get("ai_summary", "No summary available.")
-
-                        reply = f"""{status_emoji} **Job Analysis Complete**
-
-### 📦 Job
-`{job_name}`
-
-### 🔢 Build Number
-`{build_number}`
-
-### 📊 Final Status
-`{final_status}`
-
----
-
-### 🤖 AI Analysis
-
-{summary}"""
-
-                    elif result.get("status") == "QUEUED":
+                    elif result.get("status") in ["QUEUED", "TRIGGERED"]:
                         job_name = result.get("job", "Unknown Job")
                         build_number = result.get("build_number", "N/A")
                         info = result.get("info", "")
@@ -100,13 +70,44 @@ if prompt:
 `{build_number}`
 
 ### 📊 Status
-`QUEUED` (Build is running)
+`{result.get('status')}`
 
 ---
 
 {info}
 
 You can ask me to check the status anytime!"""
+
+                    elif result.get("job") and result.get("status"):
+                        job_name = result.get("job", "Unknown Job")
+                        build_number = result.get("build_number", "N/A")
+                        status = result.get("status", "UNKNOWN")
+                        building = result.get("building")
+                        duration = result.get("duration")
+                        info = result.get("message", "Status retrieved successfully.")
+
+                        status_emoji = "✅"
+                        if status == "FAILURE":
+                            status_emoji = "❌"
+                        elif status == "RUNNING":
+                            status_emoji = "⚠️"
+
+                        reply = f"""{status_emoji} **Build Status**
+
+### 📦 Job
+`{job_name}`
+
+### 🔢 Build Number
+`{build_number}`
+
+### 📊 Status
+`{status}`
+"""
+                        if building is not None:
+                            reply += f"\n### 🛠️ Building\n`{building}`\n"
+                        if duration is not None:
+                            reply += f"\n### ⏱️ Duration\n`{duration}` ms\n"
+                        reply += f"\n---\n\n{info}"
 
                     elif "triggered_jobs" in result:
                         triggered = result.get("triggered_jobs", [])
@@ -168,12 +169,10 @@ st.sidebar.markdown("""
 ### How to Use
 - **List jobs**: "list jobs" or "what jobs are available"
 - **Trigger one**: "run api health check" or "trigger scraper"
-- **Trigger all**: "run all jobs" or "trigger everything"
-- **Trigger multiple**: "run scraper and git clone" or "trigger health check and scraper"
 - **Check status**: "check status" or "what's the build status"
 
 ### Tips
 - Be specific with job names
-- You can ask for multiple jobs in one request
+- Only one job can be triggered at a time
 - Use natural language - I'll understand!
 """)

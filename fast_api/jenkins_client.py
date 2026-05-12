@@ -8,7 +8,7 @@ ENV_PATH = "/workspace/.env"
 
 # 🔥 WAIT FOR ENV FILE
 def load_env():
-    for _ in range(30):
+    for _ in range(60):
         if os.path.exists(ENV_PATH):
             load_dotenv(ENV_PATH)
             return
@@ -74,7 +74,7 @@ def get_crumb():
         return None, {"error": str(e)}
 
 
-def trigger_build(job_name):
+def trigger_build(job_name, parameters=None):
     try:
         crumb_data, error = get_crumb()
         if error:
@@ -84,13 +84,20 @@ def trigger_build(job_name):
             crumb_data["crumbRequestField"]: crumb_data["crumb"]
         }
 
-        url = f"{JENKINS_URL}/job/{job_name}/build"
+        if parameters:
+            # Jenkins buildWithParameters supports URL-encoded parameters on POST
+            url = f"{JENKINS_URL}/job/{job_name}/buildWithParameters"
+            params = {k: str(v) for k, v in parameters.items()}
+        else:
+            url = f"{JENKINS_URL}/job/{job_name}/build"
+            params = None
 
         response, error = safe_request(
             "POST",
             url,
             auth=get_auth(),
             headers=headers,
+            params=params,
             allow_redirects=False
         )
 
@@ -120,7 +127,8 @@ def trigger_build(job_name):
                 return {
                     "status": "TRIGGERED",
                     "job": job_name,
-                    "build_number": q_data["executable"]["number"]
+                    "build_number": q_data["executable"]["number"],
+                    "parameters": parameters if parameters else None
                 }
 
         return {"error": "Timeout waiting for build to start"}

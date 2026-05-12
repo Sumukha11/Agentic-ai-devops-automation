@@ -33,6 +33,6 @@ ENV PATH="/opt/venv/bin:$PATH"
 RUN mkdir -p /usr/share/jenkins/ref/init.groovy.d
 
 # Copy ONLY security init script (no job creation)
-COPY init_jenkins.groovy /usr/share/jenkins/ref/init.groovy.d/001-init-security.groovy
+COPY scripts/init_jenkins.groovy /usr/share/jenkins/ref/init.groovy.d/001-init-security.groovy
 
 USER jenkins

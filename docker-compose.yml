@@ -11,7 +11,7 @@ services:
     restart: unless-stopped
     volumes:
       - jenkins_data:/var/jenkins_home
-      - ./jenkins/init.groovy.d:/var/jenkins_home/init.groovy.d
+      - ./Jenkins/init.groovy.d:/var/jenkins_home/init.groovy.d
     environment:
       - JAVA_OPTS=-Djenkins.install.runSetupWizard=false
 
@@ -33,7 +33,7 @@ services:
       echo 'Waiting for Jenkins...' &&
       until curl -s http://jenkins:8080/login > /dev/null; do sleep 5; done &&
       echo 'Jenkins is ready' &&
-      python3 /workspace/jenkins_init_jobs_fixed.py
+      python3 /workspace/scripts/jenkins_init_jobs_fixed.py
       "
     restart: on-failure
 
@@ -45,6 +45,7 @@ services:
       - "8000:8000"
     depends_on:
       - jenkins
+      - jenkins-init
     volumes:
       - jenkins_data:/var/jenkins_home
       - ./:/workspace

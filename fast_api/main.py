@@ -1,3 +1,5 @@
+from typing import Dict, Optional
+
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from jenkins_client import (
@@ -20,6 +22,7 @@ app = FastAPI(
 # -------------------------------
 class BuildRequest(BaseModel):
     job_name: str
+    parameters: Optional[Dict[str, str]] = None
 
 
 # -------------------------------
@@ -55,7 +58,7 @@ def get_jobs():
 # -------------------------------
 @app.post("/build")
 def build_job(request: BuildRequest):
-    result = trigger_build(request.job_name)
+    result = trigger_build(request.job_name, parameters=request.parameters)
 
     if isinstance(result, dict) and "error" in result:
         raise HTTPException(status_code=500, detail=result)

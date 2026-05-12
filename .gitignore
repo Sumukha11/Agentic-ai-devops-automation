@@ -1,0 +1,9 @@
+# Ignore environment and generated files
+.env
+jenkins.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+.DS_Store

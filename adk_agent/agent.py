@@ -96,10 +96,10 @@ def safe_parse_json(response):
         tool = parsed.get("tool", "").strip()
         args = parsed.get("arguments", {})
         
-        valid_tools = ["list_jobs", "trigger_build", "trigger_builds", "get_status", "get_logs", "chat"]
+        valid_tools = ["list_jobs", "trigger_build", "get_status", "get_logs", "chat"]
         if tool not in valid_tools:
             print(f"⚠️ Invalid tool name: {tool}")
-            return {"tool": "chat", "arguments": {"message": f"Unknown tool: {tool}"}}
+            return {"tool": "chat", "arguments": {"message": f"Unknown tool: {tool}. I only support triggering one job at a time."}}
         
         print(f"✅ Valid tool: {tool}")
         return parsed
@@ -132,11 +132,15 @@ def list_jenkins_jobs():
         return {"error": f"Failed to list jobs: {str(e)}"}
 
 
-def trigger_jenkins_build(job_name: str):
+def trigger_jenkins_build(job_name: str, parameters: dict = None):
+    payload = {"job_name": job_name}
+    if parameters:
+        payload["parameters"] = parameters
+
     try:
         return requests.post(
             f"{FASTAPI_URL}/build",
-            json={"job_name": job_name},
+            json=payload,
             timeout=10
         ).json()
     except Exception as e:
@@ -198,28 +202,22 @@ YOUR ONLY JOB: Return ONLY valid JSON. NOTHING ELSE.
 
 2. NEVER RETURN EXAMPLES OR TEMPLATES
    ❌ {"tool": "trigger_build", "arguments": {"job_names": ["Job1", "Job2"]}}
-   ✅ {"tool": "trigger_builds", "arguments": {"job_names": ["Job1", "Job2"]}}
 
 3. VALID TOOLS ONLY:
    - "list_jobs" (show available jobs)
-   - "trigger_build" (run ONE job with "job_name")
-   - "trigger_builds" (run MULTIPLE jobs with "job_names" array)
+   - "trigger_build" (run ONE job with "job_name" and optional "parameters")
    - "get_status" (check status with "job_name")
    - "get_logs" (get logs with "job_name" and "build_number")
    - "chat" (conversational response with "message")
 
 4. ARGUMENT RULES:
-   - trigger_build: {"job_name": "NAME"} - STRING not array
-   - trigger_builds: {"job_names": ["NAME1", "NAME2"]} - ARRAY of strings
+   - trigger_build: {"job_name": "NAME", "parameters": {"KEY": "VALUE"}} - STRING and optional map
    - get_status: {"job_name": "NAME"}
    - list_jobs: {}
    - chat: {"message": "TEXT"}
 
 5. MULTI-JOB DETECTION:
-   - "all jobs" OR "every job" OR "all of them" → trigger_builds with ALL available
-   - "multiple jobs" OR "few jobs" → trigger_builds
-   - "X and Y" → trigger_builds with both
-   - Single job → trigger_build
+   - Single job only. Do not use batch actions.
 
 ═════════════════════════════════════════════════════════════════════════════════
 
@@ -227,9 +225,8 @@ EXAMPLES (output EXACTLY like this):
 
 - "list jobs" → {"tool": "list_jobs", "arguments": {}}
 - "run health check" → {"tool": "trigger_build", "arguments": {"job_name": "API-Health-Check"}}
-- "run all jobs" → {"tool": "trigger_builds", "arguments": {"job_names": ["API-Health-Check", "Git-Repository-Clone", "Yahoo-Stock-Scraper"]}}
-- "trigger scraper and git" → {"tool": "trigger_builds", "arguments": {"job_names": ["Yahoo-Stock-Scraper", "Git-Repository-Clone"]}}
-- "hi" → {"tool": "chat", "arguments": {"message": "Hello! I can list jobs, trigger builds, or check status. What would you like?"}}
+- "run git clone" → {"tool": "trigger_build", "arguments": {"job_name": "Git-Repository-Clone", "parameters": {"GIT_REPO_URL": "https://github.com/githubtraining/hellogitworld.git"}}}
+- "hi" → {"tool": "chat", "arguments": {"message": "Hello! I can list jobs, trigger a single build, or check status. What would you like?"}}
 - "unclear input" → {"tool": "chat", "arguments": {"message": "I didn't understand. Could you clarify?"}}
 
 ═════════════════════════════════════════════════════════════════════════════════
@@ -238,8 +235,7 @@ REMEMBER:
 - ONLY JSON
 - NO explanations
 - VALIDATE argument keys match tool
-- Use trigger_builds (plural) for 2+ jobs
-- Use trigger_build (singular) for 1 job"""
+- Use trigger_build (singular) for 1 job only"""
 
 
 def run_agent(user_prompt: str):
@@ -267,16 +263,21 @@ def run_agent(user_prompt: str):
         elif tool_name == "trigger_build":
             jobs_result = list_jenkins_jobs()
             available_jobs = jobs_result.get("jobs", [])
-            requested_job = args.get("job_name", "")
+            requested_job = args.get("job_name", "").strip()
+            parameters = args.get("parameters") if isinstance(args.get("parameters"), dict) else None
             matched_job = find_best_job_match(requested_job, available_jobs)
 
-            if not matched_job:
+            if not requested_job:
+                response = {
+                    "message": "Please specify the job name to trigger. Optionally include parameters as {'parameters': {'KEY': 'VALUE'}}."
+                }
+            elif not matched_job:
                 response = {
                     "message": f"Could not find job matching '{requested_job}'. Available: {available_jobs}",
                     "available_jobs": available_jobs
                 }
             else:
-                build_result = trigger_jenkins_build(matched_job)
+                build_result = trigger_jenkins_build(matched_job, parameters=parameters)
                 
                 if "error" in build_result:
                     response = {
@@ -286,74 +287,49 @@ def run_agent(user_prompt: str):
                 else:
                     build_number = build_result.get("build_number")
                     response = {
-                        "message": f"✅ Build triggered!",
+                        "message": "✅ Build triggered!",
                         "job": matched_job,
                         "build_number": build_number,
-                        "status": "QUEUED",
+                        "status": build_result.get("status", "TRIGGERED"),
+                        "parameters": parameters,
                         "info": f"Build #{build_number} queued. Use 'check status {matched_job}' to monitor."
                     }
 
-        # TRIGGER MULTIPLE BUILDS
-        elif tool_name == "trigger_builds":
-            jobs_result = list_jenkins_jobs()
-            available_jobs = jobs_result.get("jobs", [])
-            requested_jobs = args.get("job_names", [])
-
-            if not requested_jobs:
-                response = {"message": "No jobs specified. Available: " + ", ".join(available_jobs)}
-            else:
-                triggered = []
-                failed = []
-
-                for job_request in requested_jobs:
-                    matched_job = find_best_job_match(job_request, available_jobs)
-                    
-                    if not matched_job:
-                        failed.append(job_request)
-                    else:
-                        build_result = trigger_jenkins_build(matched_job)
-                        if "error" in build_result:
-                            failed.append(matched_job)
-                        else:
-                            triggered.append({
-                                "job": matched_job,
-                                "build_number": build_result.get("build_number"),
-                                "status": "QUEUED"
-                            })
-
-                response = {
-                    "message": f"✅ Triggered {len(triggered)} job(s)",
-                    "triggered_jobs": triggered,
-                    "failed_jobs": failed if failed else None,
-                    "info": "Use 'check status [job_name]' to monitor progress."
-                }
-
         # GET STATUS
         elif tool_name == "get_status":
-            requested_job = args.get("job_name", "")
+            requested_job = args.get("job_name", "").strip()
             build_number = args.get("build_number", None)
-            
-            try:
-                if build_number:
-                    status_result = requests.get(
-                        f"{FASTAPI_URL}/status/{requested_job}/{build_number}",
-                        timeout=10
-                    ).json()
-                else:
-                    status_result = requests.get(
-                        f"{FASTAPI_URL}/status/{requested_job}/last",
-                        timeout=10
-                    ).json()
-                
+
+            if not requested_job:
                 response = {
-                    "job": requested_job,
-                    "build_info": status_result
+                    "message": "Please provide a job name for the status check."
                 }
-            except Exception as e:
-                response = {
-                    "job": requested_job,
-                    "error": f"Failed to get status: {str(e)}"
-                }
+            else:
+                try:
+                    if build_number:
+                        status_result = requests.get(
+                            f"{FASTAPI_URL}/status/{requested_job}/{build_number}",
+                            timeout=10
+                        ).json()
+                    else:
+                        status_result = requests.get(
+                            f"{FASTAPI_URL}/status/{requested_job}/last",
+                            timeout=10
+                        ).json()
+
+                    response = {
+                        "job": requested_job,
+                        "build_number": status_result.get("build_number"),
+                        "status": status_result.get("status"),
+                        "building": status_result.get("building"),
+                        "duration": status_result.get("duration"),
+                        "message": status_result.get("message", "Status retrieved successfully.")
+                    }
+                except Exception as e:
+                    response = {
+                        "job": requested_job,
+                        "error": f"Failed to get status: {str(e)}"
+                    }
 
         # GET LOGS
         elif tool_name == "get_logs":

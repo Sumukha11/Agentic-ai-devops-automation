@@ -643,7 +643,7 @@ volumes:
 FROM jenkins/jenkins:lts
 RUN apt-get install python3 python3-pip  # Agent requirements
 RUN jenkins-plugin-cli --plugins workflow-job workflow-cps git
-COPY init_jenkins.groovy /usr/share/jenkins/ref/init.groovy.d/001-init-security.groovy
+COPY scripts/init_jenkins.groovy /usr/share/jenkins/ref/init.groovy.d/001-init-security.groovy
 ```
 
 **Phase 2: Container Startup**
@@ -653,7 +653,7 @@ COPY init_jenkins.groovy /usr/share/jenkins/ref/init.groovy.d/001-init-security.
 - Configures security realm
 - Disables setup wizard
 
-**Phase 3: Job Initialization (jenkins_init_jobs_fixed.py)**
+**Phase 3: Job Initialization (`scripts/jenkins_init_jobs_fixed.py`)**
 - Python script runs inside `jenkins-init` service
 - Waits for Jenkins HTTP endpoint ready (curl loop)
 - Reads Groovy pipeline files from repository
