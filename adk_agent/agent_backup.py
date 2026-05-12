@@ -7,19 +7,30 @@ import difflib
 import re
 from langchain_ollama import OllamaLLM
 
-FASTAPI_URL = os.getenv("FASTAPI_URL", "http://fastapi:8000")
-OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama:11434")
+FASTAPI_URL = os.getenv(
+    "FASTAPI_URL",
+    "http://fastapi:8000"
+)
 
+OLLAMA_URL = os.getenv(
+    "OLLAMA_URL",
+    "http://ollama:11434"
+)
+
+# 🔥 LLM - Lazy initialization (don't block container start)
 llm = None
 
 def init_llm():
-    """Initialize Ollama LLM client with exponential backoff."""
+    """
+    Attempt to initialize the Ollama LLM client with exponential backoff.
+    Safe to call repeatedly - caches successful initialization.
+    """
     global llm
     if llm is not None:
-        return llm
+        return llm  # Already initialized
     
     max_retries = 3
-    base_delay = 2
+    base_delay = 2  # Start with 2 second delay
     
     for attempt in range(max_retries):
         try:
@@ -29,7 +40,7 @@ def init_llm():
             return llm
         except Exception as e:
             if attempt < max_retries - 1:
-                delay = base_delay * (2 ** attempt)
+                delay = base_delay * (2 ** attempt)  # Exponential backoff: 2s, 4s, 8s
                 print(f"⚠️ LLM initialization attempt {attempt + 1} failed: {e}")
                 print(f"   Retrying in {delay}s...")
                 time.sleep(delay)
@@ -39,8 +50,12 @@ def init_llm():
     return None
 
 
+# Helper: robust LLM call that ALWAYS tries Ollama, with multiple fallbacks
 def call_llm(prompt_text: str, timeout_sec=45):
-    """Try Ollama LLM with multiple fallback strategies."""
+    """
+    Try Ollama LLM with multiple fallback strategies.
+    Reduced timeout (45s) for responsive UI interactions.
+    """
     full_prompt = f"{SYSTEM_PROMPT}\n\nUser: {prompt_text}\n\nAssistant:"
     try:
         test_llm = init_llm()
@@ -51,6 +66,7 @@ def call_llm(prompt_text: str, timeout_sec=45):
     except Exception as e:
         print(f"⚠️ LangChain client attempt failed: {e}")
 
+    # Direct HTTP fallback
     endpoints = ["/api/chat"]
     headers = {"Content-Type": "application/json"}
 
@@ -68,7 +84,12 @@ def call_llm(prompt_text: str, timeout_sec=45):
                 j = resp.json()
                 result_text = None
 
-                if isinstance(j, dict) and "message" in j and isinstance(j["message"], dict):
+                # Standard formats
+                if (
+                    isinstance(j, dict)
+                    and "message" in j
+                    and isinstance(j["message"], dict)
+                ):
                     result_text = j["message"].get("content", "")
                 elif "response" in j:
                     result_text = j["response"]
@@ -85,10 +106,14 @@ def call_llm(prompt_text: str, timeout_sec=45):
 
 
 def safe_parse_json(response):
-    """Parse JSON with strict validation."""
+    """
+    Parse JSON response from LLM with strict validation.
+    Logs issues for debugging.
+    """
     try:
         parsed = json.loads(response)
         
+        # Validate structure
         if not isinstance(parsed, dict):
             print(f"⚠️ Response is not a dict: {type(parsed)}")
             return {"tool": "chat", "arguments": {"message": "Invalid response format"}}
@@ -96,22 +121,31 @@ def safe_parse_json(response):
         tool = parsed.get("tool", "").strip()
         args = parsed.get("arguments", {})
         
+        # Validate tool name
         valid_tools = ["list_jobs", "trigger_build", "trigger_builds", "get_status", "get_logs", "chat"]
         if tool not in valid_tools:
             print(f"⚠️ Invalid tool name: {tool}")
             return {"tool": "chat", "arguments": {"message": f"Unknown tool: {tool}"}}
         
-        print(f"✅ Valid tool: {tool}")
+        print(f"✅ Parsed valid JSON: tool={tool}, args={args}")
         return parsed
     
     except json.JSONDecodeError as e:
         print(f"❌ JSON parse error: {e}")
-        print(f"   Response: {response[:200]}")
-        return {"tool": "chat", "arguments": {"message": "I couldn't process that. Could you rephrase?"}}
+        print(f"   Raw response: {response[:200]}")
+        return {
+            "tool": "chat",
+            "arguments": {"message": "I couldn't process that. Could you rephrase?"}
+        }
+    except Exception as e:
+        print(f"❌ Unexpected error in safe_parse_json: {e}")
+        return {
+            "tool": "chat",
+            "arguments": {"message": "An error occurred processing your request"}
+        }
 
 
 def find_best_job_match(user_input, available_jobs):
-    """Find closest matching job name."""
     if not available_jobs:
         return None
 
@@ -121,10 +155,16 @@ def find_best_job_match(user_input, available_jobs):
         for job in available_jobs
     }
 
-    matches = difflib.get_close_matches(normalized_input, normalized_jobs.keys(), n=1, cutoff=0.4)
+    matches = difflib.get_close_matches(
+        normalized_input,
+        normalized_jobs.keys(),
+        n=1,
+        cutoff=0.4
+    )
     return normalized_jobs[matches[0]] if matches else None
 
 
+# 🔧 TOOL IMPLEMENTATIONS
 def list_jenkins_jobs():
     try:
         return requests.get(f"{FASTAPI_URL}/jobs", timeout=10).json()
@@ -145,7 +185,10 @@ def trigger_jenkins_build(job_name: str):
 
 def get_jenkins_status(job_name: str):
     try:
-        return requests.get(f"{FASTAPI_URL}/status/{job_name}", timeout=10).json()
+        return requests.get(
+            f"{FASTAPI_URL}/status/{job_name}",
+            timeout=10
+        ).json()
     except Exception as e:
         return {"error": f"Failed to get status: {str(e)}"}
 
@@ -160,102 +203,109 @@ def get_jenkins_logs(job_name: str, build_number: int):
         return {"error": f"Failed to get logs: {str(e)}"}
 
 
+# 🕒 WAIT FOR BUILD COMPLETION (with reduced timeout for UI responsiveness)
 def wait_for_build_completion(job_name, build_number, timeout=60):
-    """Wait for build with reduced timeout."""
+    """
+    Wait for build completion with configurable timeout.
+    Default 60s timeout prevents Streamlit UI from blocking.
+    For longer builds, user can check status separately.
+    """
     start = time.time()
 
     while time.time() - start < timeout:
-        try:
-            status_result = requests.get(
-                f"{FASTAPI_URL}/status/{job_name}/{build_number}",
-                timeout=10
-            ).json()
 
-            status = status_result.get("status")
+        status_result = requests.get(
+            f"{FASTAPI_URL}/status/{job_name}/{build_number}",
+            timeout=10
+        ).json()
 
-            if status in ["SUCCESS", "FAILURE"]:
-                return status
+        status = status_result.get("status")
 
-            time.sleep(3)
-        except Exception as e:
-            print(f"Status check error: {e}")
-            time.sleep(3)
+        if status in ["SUCCESS", "FAILURE"]:
+            return status
 
-    return "RUNNING"
+        time.sleep(3)
+
+    return "RUNNING"  # Return RUNNING instead of TIMEOUT to indicate user can check later
 
 
-SYSTEM_PROMPT = """You are **Lamma**, an AI-powered DevOps assistant for Jenkins CI/CD automation.
+# 🎯 SYSTEM PROMPT
+SYSTEM_PROMPT = """
+You are **Lamma**, an AI-powered DevOps assistant specializing in Jenkins CI/CD automation.
 
-YOUR ONLY JOB: Return ONLY valid JSON. NOTHING ELSE.
+Your role is to help the user interact with a Jenkins environment by understanding natural language requests and responding with **ONLY valid JSON**, never text or markdown explanations.
 
-═════════════════════════════════════════════════════════════════════════════════
+Your behavior should simulate a helpful, concise, and intelligent DevOps chatbot that can:
+- List Jenkins jobs
+- Trigger one or multiple Jenkins builds
+- Check the status of specific builds
+- Retrieve and analyze Jenkins build logs
+- Provide conversational replies (for greetings or clarifications)
+- Always structure responses as JSON following the specified schema
 
-🚨 CRITICAL RULES:
+---
 
-1. RESPONSE = ONLY VALID JSON, NO TEXT BEFORE OR AFTER
-   ✅ {"tool": "list_jobs", "arguments": {}}
-   ❌ Here's the list: {"tool": ...}
+### RESPONSE FORMAT
 
-2. NEVER RETURN EXAMPLES OR TEMPLATES
-   ❌ {"tool": "trigger_build", "arguments": {"job_names": ["Job1", "Job2"]}}
-   ✅ {"tool": "trigger_builds", "arguments": {"job_names": ["Job1", "Job2"]}}
+Respond **only** with valid JSON using the following format:
 
-3. VALID TOOLS ONLY:
-   - "list_jobs" (show available jobs)
-   - "trigger_build" (run ONE job with "job_name")
-   - "trigger_builds" (run MULTIPLE jobs with "job_names" array)
-   - "get_status" (check status with "job_name")
-   - "get_logs" (get logs with "job_name" and "build_number")
-   - "chat" (conversational response with "message")
+```json
+{
+  "tool": "<tool_name>",
+  "arguments": {
+      "key": "value"
+  }
+}
 
-4. ARGUMENT RULES:
-   - trigger_build: {"job_name": "NAME"} - STRING not array
-   - trigger_builds: {"job_names": ["NAME1", "NAME2"]} - ARRAY of strings
-   - get_status: {"job_name": "NAME"}
-   - list_jobs: {}
-   - chat: {"message": "TEXT"}
+### Examples
+User: list all Jenkins jobs
+Response:
+{
+  "tool": "list_jobs",
+  "arguments": {}
+}
 
-5. MULTI-JOB DETECTION:
-   - "all jobs" OR "every job" OR "all of them" → trigger_builds with ALL available
-   - "multiple jobs" OR "few jobs" → trigger_builds
-   - "X and Y" → trigger_builds with both
-   - Single job → trigger_build
+User: start the yahoo scraper job
+Response:
+{
+  "tool": "trigger_build",
+  "arguments": {
+      "job_name": "Yahoo-Stock-Scraper"
+  }
+}
 
-═════════════════════════════════════════════════════════════════════════════════
+User: check if the fastapi deployment was successful
+Response:
+{
+  "tool": "get_status",
+  "arguments": {
+      "job_name": "fastapi-deployment"
+  }
+}
 
-EXAMPLES (output EXACTLY like this):
+User: hello there!
+Response:
+{
+  "tool": "chat",
+  "arguments": {
+      "message": "Hello! I’m Lamma, your AI DevOps assistant for Jenkins automation. How can I help you today?"
+  }
+}
 
-- "list jobs" → {"tool": "list_jobs", "arguments": {}}
-- "run health check" → {"tool": "trigger_build", "arguments": {"job_name": "API-Health-Check"}}
-- "run all jobs" → {"tool": "trigger_builds", "arguments": {"job_names": ["API-Health-Check", "Git-Repository-Clone", "Yahoo-Stock-Scraper"]}}
-- "trigger scraper and git" → {"tool": "trigger_builds", "arguments": {"job_names": ["Yahoo-Stock-Scraper", "Git-Repository-Clone"]}}
-- "hi" → {"tool": "chat", "arguments": {"message": "Hello! I can list jobs, trigger builds, or check status. What would you like?"}}
-- "unclear input" → {"tool": "chat", "arguments": {"message": "I didn't understand. Could you clarify?"}}
-
-═════════════════════════════════════════════════════════════════════════════════
-
-REMEMBER:
-- ONLY JSON
-- NO explanations
-- VALIDATE argument keys match tool
-- Use trigger_builds (plural) for 2+ jobs
-- Use trigger_build (singular) for 1 job"""
+"""
 
 
+# 🚀 RUN AGENT - Main entry
 def run_agent(user_prompt: str):
     try:
         print(f"\n=== USER === {user_prompt}")
         llm_response = call_llm(user_prompt)
-        print(f"=== LLM RESPONSE === {llm_response}")
-        
         parsed = safe_parse_json(llm_response)
-        print(f"=== PARSED === {parsed}")
-        
         tool_name = parsed.get("tool", "chat")
         args = parsed.get("arguments", {})
         response = {}
 
-        # LIST JOBS
+        # STEP 2 — TOOL EXECUTION
         if tool_name == "list_jobs":
             jobs_result = list_jenkins_jobs()
             response = {
@@ -263,7 +313,6 @@ def run_agent(user_prompt: str):
                 "jobs": jobs_result.get("jobs", [])
             }
 
-        # TRIGGER SINGLE BUILD
         elif tool_name == "trigger_build":
             jobs_result = list_jenkins_jobs()
             available_jobs = jobs_result.get("jobs", [])
@@ -272,74 +321,41 @@ def run_agent(user_prompt: str):
 
             if not matched_job:
                 response = {
-                    "message": f"Could not find job matching '{requested_job}'. Available: {available_jobs}",
+                    "message": f"Could not find a matching Jenkins job for '{requested_job}'.",
                     "available_jobs": available_jobs
                 }
             else:
+                # 🚀 Trigger build and return immediately (async pattern)
                 build_result = trigger_jenkins_build(matched_job)
                 
                 if "error" in build_result:
                     response = {
-                        "message": f"Failed to trigger: {build_result['error']}",
+                        "message": f"Failed to trigger build: {build_result['error']}",
                         "job": matched_job
                     }
                 else:
                     build_number = build_result.get("build_number")
                     response = {
-                        "message": f"✅ Build triggered!",
+                        "message": f"✅ Build triggered successfully!",
                         "job": matched_job,
                         "build_number": build_number,
                         "status": "QUEUED",
-                        "info": f"Build #{build_number} queued. Use 'check status {matched_job}' to monitor."
+                        "info": f"Build #{build_number} has been queued. Use 'check status {matched_job}' to monitor progress."
                     }
 
-        # TRIGGER MULTIPLE BUILDS
-        elif tool_name == "trigger_builds":
-            jobs_result = list_jenkins_jobs()
-            available_jobs = jobs_result.get("jobs", [])
-            requested_jobs = args.get("job_names", [])
-
-            if not requested_jobs:
-                response = {"message": "No jobs specified. Available: " + ", ".join(available_jobs)}
-            else:
-                triggered = []
-                failed = []
-
-                for job_request in requested_jobs:
-                    matched_job = find_best_job_match(job_request, available_jobs)
-                    
-                    if not matched_job:
-                        failed.append(job_request)
-                    else:
-                        build_result = trigger_jenkins_build(matched_job)
-                        if "error" in build_result:
-                            failed.append(matched_job)
-                        else:
-                            triggered.append({
-                                "job": matched_job,
-                                "build_number": build_result.get("build_number"),
-                                "status": "QUEUED"
-                            })
-
-                response = {
-                    "message": f"✅ Triggered {len(triggered)} job(s)",
-                    "triggered_jobs": triggered,
-                    "failed_jobs": failed if failed else None,
-                    "info": "Use 'check status [job_name]' to monitor progress."
-                }
-
-        # GET STATUS
         elif tool_name == "get_status":
             requested_job = args.get("job_name", "")
             build_number = args.get("build_number", None)
             
             try:
                 if build_number:
+                    # Get specific build status
                     status_result = requests.get(
                         f"{FASTAPI_URL}/status/{requested_job}/{build_number}",
                         timeout=10
                     ).json()
                 else:
+                    # Get last build status
                     status_result = requests.get(
                         f"{FASTAPI_URL}/status/{requested_job}/last",
                         timeout=10
@@ -355,7 +371,6 @@ def run_agent(user_prompt: str):
                     "error": f"Failed to get status: {str(e)}"
                 }
 
-        # GET LOGS
         elif tool_name == "get_logs":
             requested_job = args.get("job_name", "")
             build_number = args.get("build_number", 1)
@@ -366,10 +381,9 @@ def run_agent(user_prompt: str):
                 "logs": logs
             }
 
-        # CHAT
         else:
             response = {
-                "message": args.get("message", "Hello! I'm Lamma, your DevOps assistant. How can I help?")
+                "message": args.get("message", "Hello! I'm Lamma, your AI DevOps assistant.")
             }
 
         return {"success": True, "response": response}

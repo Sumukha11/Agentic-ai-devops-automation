@@ -7,7 +7,7 @@ services:
     container_name: jenkins
     ports:
       - "8080:8080"
-      - "50000:50000"
+      - "50001:50000"
     restart: unless-stopped
     volumes:
       - jenkins_data:/var/jenkins_home
@@ -60,7 +60,53 @@ services:
     volumes:
       - ollama_data:/root/.ollama
     restart: unless-stopped
-    entrypoint: sh -c "ollama serve & sleep 15 && ollama pull mistral && wait"
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+      - OLLAMA_DEBUG=0
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sS http://localhost:11434/ > /dev/null || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 20
+      start_period: 180s  # Increased from 120s to give Ollama more time to start
+
+  ollama-puller:
+    image: ollama/ollama:latest
+    depends_on:
+      - ollama
+    container_name: ollama-puller
+    volumes:
+      - ollama_data:/root/.ollama
+    restart: "no"
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    entrypoint: |-
+      /bin/bash -c "
+      set -e
+
+      echo '[ollama-puller] Waiting for Ollama server to be ready...'
+      for i in {1..60}; do
+        if curl -sS http://ollama:11434/ > /dev/null 2>&1; then
+          echo '[ollama-puller] ✓ Ollama server is ready'
+          break
+        fi
+        echo \"[ollama-puller] Waiting... ($i/60)\"
+        sleep 2
+      done
+
+      echo '[ollama-puller] Checking for llama3 model...'
+
+      if ollama list | grep -q llama3; then
+        echo '[ollama-puller] ✓ Model already present'
+        exit 0
+      fi
+
+      echo '[ollama-puller] Pulling llama3 model (this may take several minutes)...'
+
+      ollama pull llama3
+
+      echo '[ollama-puller] ✓ Model pull complete'
+      "
 
   agent:
     build:
@@ -70,14 +116,18 @@ services:
     ports:
       - "8100:8100"
     depends_on:
-      - fastapi
-      - ollama
+      fastapi:
+        condition: service_started
+      ollama:
+        condition: service_started
+      ollama-puller:
+        condition: service_completed_successfully
     environment:
       - FASTAPI_URL=http://fastapi:8000
       - OLLAMA_URL=http://ollama:11434
     restart: unless-stopped
     volumes:
-    - ./:/workspace
+      - ./:/workspace
   streamlit:
     build:
       context: ./streamlit
@@ -85,11 +135,14 @@ services:
     ports:
       - "8501:8501"
     depends_on:
-      - agent
-      - fastapi
+      agent:
+        condition: service_started
+      fastapi:
+        condition: service_started
     environment:
-      - AGENT_URL=http://agent:8100/query
       - FASTAPI_URL=http://fastapi:8000
+      - OLLAMA_URL=http://ollama:11434
+      - OLLAMA_MODEL=llama3
     restart: unless-stopped
 
 volumes:

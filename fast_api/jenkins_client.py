@@ -26,8 +26,11 @@ def get_auth():
 
 
 def safe_request(method, url, **kwargs):
+    """Make HTTP request with reasonable timeout handling."""
     try:
-        response = requests.request(method, url, timeout=30, **kwargs)
+        # Default timeout: 25 seconds (reduced from 30 for responsiveness)
+        timeout = kwargs.pop('timeout', 25)
+        response = requests.request(method, url, timeout=timeout, **kwargs)
 
         if response.status_code >= 400:
             return None, {
@@ -37,6 +40,8 @@ def safe_request(method, url, **kwargs):
 
         return response, None
 
+    except requests.exceptions.Timeout:
+        return None, {"error": "Request timed out"}
     except Exception as e:
         return None, {"error": str(e)}
 
@@ -166,7 +171,7 @@ def get_logs(job_name, build_number):
     url = f"{JENKINS_URL}/job/{job_name}/{build_number}/consoleText"
 
     for _ in range(5):
-        response, error = safe_request("GET", url, auth=get_auth())
+        response, error = safe_request("GET", url, auth=get_auth(), timeout=20)
 
         if error:
             time.sleep(2)

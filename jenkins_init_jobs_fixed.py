@@ -160,92 +160,32 @@ def main():
         print("⚠️ Could not generate API token; continuing with configured token")
     write_env_files(token)
     
-    # Create default jobs
-    print("\nCreating default Jenkins jobs...")
-    default_jobs = [
-        {
-            "name": "API-Health-Check",
-            "xml": """<?xml version='1.1' encoding='UTF-8'?>
-<org.jenkinsci.plugins.workflow.job.WorkflowJob plugin="workflow-job@1319.v7eb_51b_2a_fa_61">
-  <actions/>
-  <description>Check health of critical APIs</description>
-  <keepDependencies>false</keepDependencies>
-  <properties/>
-  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3809.v6ad307f7d7a_7">
-    <script>pipeline {
-    agent any
-    stages {
-        stage("Health Check") {
-            steps {
-                sh "echo Checking API health..."
-                sh "curl -I https://www.google.com || true"
-                sh "curl -I https://api.github.com || true"
-            }
-        }
+    # Create default jobs from repository scripts if available
+    print("\nCreating default Jenkins jobs from repository scripts...")
+    # Map job names to script files placed under <workspace>/jenkins/
+    job_script_map = {
+        "API-Health-Check": "api_healcheck.groovy",
+        "Yahoo-Stock-Scraper": "yahoo_scraper.groovy",
+        "Git-Repository-Clone": "git_repo_clone.groovy",
     }
-}</script>
-    <sandbox>true</sandbox>
-  </definition>
-  <triggers/>
-  <disabled>false</disabled>
-</org.jenkinsci.plugins.workflow.job.WorkflowJob>"""
-        },
-        {
-            "name": "Yahoo-Stock-Scraper",
-            "xml": """<?xml version='1.1' encoding='UTF-8'?>
-<org.jenkinsci.plugins.workflow.job.WorkflowJob plugin="workflow-job@1319.v7eb_51b_2a_fa_61">
-  <actions/>
-  <description>Fetch stock prices from Yahoo Finance</description>
-  <keepDependencies>false</keepDependencies>
-  <properties/>
-  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3809.v6ad307f7d7a_7">
-    <script>pipeline {
-    agent any
-    stages {
-        stage("Fetch Stock") {
-            steps {
-                sh "echo Fetching stock data for AAPL..."
-                sh "echo Stock price data would be retrieved here"
-            }
-        }
-    }
-}</script>
-    <sandbox>true</sandbox>
-  </definition>
-  <triggers/>
-  <disabled>false</disabled>
-</org.jenkinsci.plugins.workflow.job.WorkflowJob>"""
-        },
-        {
-            "name": "Git-Repository-Clone",
-            "xml": """<?xml version='1.1' encoding='UTF-8'?>
-<org.jenkinsci.plugins.workflow.job.WorkflowJob plugin="workflow-job@1319.v7eb_51b_2a_fa_61">
-  <actions/>
-  <description>Clone a git repository</description>
-  <keepDependencies>false</keepDependencies>
-  <properties/>
-  <definition class="org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition" plugin="workflow-cps@3809.v6ad307f7d7a_7">
-    <script>pipeline {
-    agent any
-    stages {
-        stage("Clone") {
-            steps {
-                echo "Clone Repository Stage"
-                sh "echo Configure this job with a git repository URL"
-            }
-        }
-    }
-}</script>
-    <sandbox>true</sandbox>
-  </definition>
-  <triggers/>
-  <disabled>false</disabled>
-</org.jenkinsci.plugins.workflow.job.WorkflowJob>"""
-        }
-    ]
+
+    for job_name, script_file in job_script_map.items():
+        script_path = os.path.join(WORKSPACE, "jenkins", script_file)
+        if os.path.exists(script_path):
+            try:
+                with open(script_path, 'r') as sf:
+                    script = sf.read()
+                xml = create_pipeline_xml(script)
+                print(f"Creating job from script: {job_name} <- {script_file}")
+                create_job(job_name, xml)
+            except Exception as e:
+                print(f"✗ Failed to read/create job {job_name} from {script_file}: {e}")
+        else:
+            print(f"⚠️ Script not found for {job_name} at {script_path}; skipping. You can add the script to {os.path.join(WORKSPACE, 'jenkins')} and restart this init container.")
     
-    for job in default_jobs:
-        create_job(job["name"], job["xml"])
+    # Create jobs from folder if present
+    print("\nCreating pipeline jobs from folder if present...")
+
     
     # Create jobs from folder if present
     print("\nCreating pipeline jobs from folder if present...")

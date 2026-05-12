@@ -1,33 +1,23 @@
 import os
-import streamlit as st
+import json
 import requests
-import time
+import streamlit as st
 
-AGENT_URL = os.getenv("AGENT_URL", "http://localhost:8100/query")
-FASTAPI_URL = os.getenv("FASTAPI_URL", "http://localhost:8000")
+AGENT_URL = os.getenv("AGENT_URL", "http://agent:8100/query")
 
 st.set_page_config(page_title="AI DevOps Assistant", layout="wide")
 
 st.title("🤖 AI DevOps Assistant")
-st.caption("Chat-based Jenkins Automation")
+st.caption("AI-powered Jenkins Automation & Build Analysis")
 
-# ---------------------------
-# SESSION STATE
-# ---------------------------
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# ---------------------------
-# DISPLAY CHAT HISTORY
-# ---------------------------
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-# ---------------------------
-# INPUT
-# ---------------------------
-prompt = st.chat_input("Try: run api_healthcheck or list jobs")
+prompt = st.chat_input("Try: list jobs, run api check, trigger all jobs")
 
 if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -35,231 +25,155 @@ if prompt:
     with st.chat_message("user"):
         st.markdown(prompt)
 
-    # ---------------------------
-    # CALL AGENT
-    # ---------------------------
     with st.chat_message("assistant"):
-        with st.spinner("Thinking..."):
-
+        with st.spinner("Lamma is analyzing your request..."):
             try:
-                res = requests.post(
+                response = requests.post(
                     AGENT_URL,
                     json={"prompt": prompt},
-                    timeout=60
+                    timeout=120
                 )
 
-                api_response = res.json()
-                response = api_response.get("response")
-                
-                # Handle case where response is a string representation of dict
-                if isinstance(response, str):
+                api_response = response.json()
+                result = api_response.get("response")
+
+                if isinstance(result, str):
                     try:
-                        response = eval(response)
-                    except:
+                        result = json.loads(result)
+                    except Exception:
                         pass
 
-                # ---------------------------
-                # HANDLE RESPONSE
-                # ---------------------------
-                if isinstance(response, dict):
+                reply = ""
 
-                    # ---------------------------
-                    # 📋 JOB LIST
-                    # ---------------------------
-                    if "jobs" in response:
-                        jobs = response["jobs"]
+                if isinstance(result, dict):
 
-                        reply = "📋 **Available Jobs:**\n\n"
+                    if "error" in result:
+                        reply = f"❌ **Error**\n\n{result['error']}"
+
+                    elif "jobs" in result:
+                        jobs = result.get("jobs", [])
+                        reply = "📋 **Available Jenkins Jobs**\n\n"
                         for job in jobs:
                             reply += f"- `{job}`\n"
 
-                        st.markdown(reply)
+                    elif "ai_summary" in result:
+                        job_name = result.get("job", "Unknown Job")
+                        final_status = result.get("final_status", "UNKNOWN")
+                        build_number = result.get("build_number", "N/A")
 
-                    # ---------------------------
-                    # ❌ ERROR
-                    # ---------------------------
-                    elif "error" in response:
-                        reply = f"❌ {response['error']}"
-                        st.markdown(reply)
-
-                    # ---------------------------
-                    # 🚀 TRIGGERED FLOW
-                    # ---------------------------
-                    elif "build_number" in response or ("job" in response and "status" in response):
-
-                        job_name = response.get("job")
-                        build_number = response.get("build_number")
-
-                        st.markdown(f"🚀 **Job Triggered:** `{job_name}`")
-                        if build_number:
-                            st.markdown(f"🔢 **Build Number:** `{build_number}`")
-                        else:
-                            st.markdown("🔢 **Build Number:** `pending`")
-
-                        status_placeholder = st.empty()
-                        logs_placeholder = st.empty()
-
-                        start_time = time.time()
-                        timeout = 120  # seconds
-                        final_status = "TRIGGERED"
-
-                        status_placeholder.markdown(
-                            f"📊 **Status:** `{final_status}` (triggered)"
-                        )
-
-                        # if no build number, wait for last status and get it
-                        if not build_number:
-                            wait_start = time.time()
-                            last_res = None
-                            while time.time() - wait_start < timeout:
-                                time.sleep(2)
-                                last_res = requests.get(
-                                    f"{FASTAPI_URL}/status/{job_name}/last"
-                                ).json()
-                                bnum = last_res.get("build_number")
-                                status_k = last_res.get("status") or "RUNNING"
-
-                                status_placeholder.markdown(
-                                    f"⏳ **Waiting for build number...** status: `{status_k}`"
-                                )
-
-                                if bnum:
-                                    build_number = bnum
-                                    st.markdown(f"🔢 **Detected Build Number:** `{build_number}`")
-                                    break
-
-                                # if previous build completed (e.g. SUCCESS/FAILURE) and build number still missing,
-                                # attempt to read from last build anyway
-                                if status_k in ["SUCCESS", "FAILURE"] and last_res is not None:
-                                    build_number = last_res.get("build_number")
-                                    if build_number:
-                                        st.markdown(f"🔢 **Detected Build Number from completed build:** `{build_number}`")
-                                        break
-
-                            # if still no build number after timeout, set to last if available
-                            if not build_number and last_res is not None:
-                                build_number = last_res.get("build_number")
-                                if build_number:
-                                    st.markdown(f"🔢 **Fallback Build Number:** `{build_number}` (may be last completed build)")
-
-                        # ---------------------------
-                        # 🔁 POLLING LOOP
-                        # ---------------------------
-                        while True:
-                            time.sleep(2)
-
-                            # ---- STATUS ----
-                            if build_number:
-                                status_res = requests.get(
-                                    f"{FASTAPI_URL}/status/{job_name}/{build_number}"
-                                ).json()
-                            else:
-                                status_res = requests.get(
-                                    f"{FASTAPI_URL}/status/{job_name}/last"
-                                ).json()
-
-                            final_status = status_res.get("status")
-
-                            # Handle None → RUNNING
-                            if final_status is None:
-                                final_status = "RUNNING"
-
-                            status_placeholder.markdown(
-                                f"📊 **Status:** `{final_status}`"
-                            )
-
-                            # ---- LOGS ----
-                            if build_number:
-                                logs_res = requests.get(
-                                    f"{FASTAPI_URL}/logs/{job_name}/{build_number}"
-                                ).json()
-                            else:
-                                # no build number yet, attempt last build logs fallback
-                                last_status = requests.get(
-                                    f"{FASTAPI_URL}/status/{job_name}/last"
-                                ).json()
-                                last_build_number = last_status.get("build_number")
-                                if last_build_number:
-                                    logs_res = requests.get(
-                                        f"{FASTAPI_URL}/logs/{job_name}/{last_build_number}"
-                                    ).json()
-                                else:
-                                    logs_res = {"logs": "Waiting for first build to start..."}
-
-                            logs = logs_res.get("logs")
-                            if not logs and "message" in logs_res:
-                                logs = logs_res.get("message")
-
-                            # Show a rolling console window with latest lines
-                            if logs:
-                                display_lines = logs.splitlines()
-                                if len(display_lines) > 25:
-                                    display_lines = display_lines[-25:]
-                                logs_placeholder.code("\n".join(display_lines))
-                            else:
-                                logs_placeholder.code("Fetching console output...")
-
-                            # ---- EXIT CONDITIONS ----
-                            if final_status in ["SUCCESS", "FAILURE"]:
-                                break
-
-                            if time.time() - start_time > timeout:
-                                final_status = "TIMEOUT"
-                                break
-
-                        # ---------------------------
-                        # FINAL MESSAGE
-                        # ---------------------------
-                        if final_status == "SUCCESS":
-                            reply = "✅ **Build Succeeded**"
-                        elif final_status == "FAILURE":
-                            reply = "❌ **Build Failed**"
+                        status_emoji = "✅"
+                        if final_status == "FAILURE":
+                            status_emoji = "❌"
                         elif final_status == "TIMEOUT":
-                            reply = "⚠️ **Build Timed Out**"
-                        else:
-                            reply = f"⚠️ **Unknown Status: {final_status}**"
+                            status_emoji = "⚠️"
 
-                        # final logs (full or large sample)
-                        if build_number:
-                            final_logs_res = requests.get(
-                                f"{FASTAPI_URL}/logs/{job_name}/{build_number}"
-                            ).json()
-                            final_logs = final_logs_res.get("logs", "")
-                            if final_logs:
-                                st.markdown("📄 **Final console output:**")
-                                st.code("\n".join(final_logs.splitlines()[-200:]))
+                        summary = result.get("ai_summary", "No summary available.")
 
-                        st.markdown(reply)
+                        reply = f"""{status_emoji} **Job Analysis Complete**
 
-                    # ---------------------------
-                    # ℹ️ MESSAGE
-                    # ---------------------------
-                    elif "message" in response:
-                        reply = f"ℹ️ {response['message']}"
-                        st.markdown(reply)
+### 📦 Job
+`{job_name}`
 
-                    # ---------------------------
-                    # FALLBACK
-                    # ---------------------------
+### 🔢 Build Number
+`{build_number}`
+
+### 📊 Final Status
+`{final_status}`
+
+---
+
+### 🤖 AI Analysis
+
+{summary}"""
+
+                    elif result.get("status") == "QUEUED":
+                        job_name = result.get("job", "Unknown Job")
+                        build_number = result.get("build_number", "N/A")
+                        info = result.get("info", "")
+                        
+                        reply = f"""✅ **Build Triggered**
+
+### 📦 Job
+`{job_name}`
+
+### 🔢 Build Number
+`{build_number}`
+
+### 📊 Status
+`QUEUED` (Build is running)
+
+---
+
+{info}
+
+You can ask me to check the status anytime!"""
+
+                    elif "triggered_jobs" in result:
+                        triggered = result.get("triggered_jobs", [])
+                        failed = result.get("failed_jobs", [])
+                        
+                        reply = "✅ **Multiple Builds Triggered**\n\n"
+                        
+                        if triggered:
+                            reply += "### ✅ Successfully Triggered:\n"
+                            for job_info in triggered:
+                                job = job_info.get("job", "Unknown")
+                                bn = job_info.get("build_number", "N/A")
+                                reply += f"- `{job}` → Build #{bn}\n"
+                        
+                        if failed:
+                            reply += "\n### ❌ Failed:\n"
+                            for job in failed:
+                                reply += f"- `{job}`\n"
+                        
+                        info = result.get("info", "Check status anytime!")
+                        reply += f"\n---\n\n{info}"
+
+                    elif "message" in result:
+                        reply = f"ℹ️ {result['message']}"
+
                     else:
-                        reply = str(response)
-                        st.markdown(reply)
+                        reply = f"⚠️ Unexpected response format\n\n```json\n{json.dumps(result, indent=2)}\n```"
 
                 else:
-                    reply = str(response)
-                    st.markdown(reply)
+                    reply = str(result)
 
             except requests.exceptions.Timeout:
-                reply = "⚠️ Error: Request timed out. Agent may be starting up."
-                st.markdown(reply)
-            except Exception as e:
-                reply = f"⚠️ Error: {str(e)}"
-                st.markdown(reply)
+                reply = """⚠️ Request Timed Out
 
-    # ---------------------------
-    # SAVE RESPONSE
-    # ---------------------------
-    st.session_state.messages.append({
-        "role": "assistant",
-        "content": reply
-    })
+The AI agent may still be:
+- loading the model
+- waiting for Jenkins
+- analyzing logs
+
+Please try again in a few seconds."""
+
+            except requests.exceptions.ConnectionError:
+                reply = """❌ Connection Error
+
+Could not connect to the AI agent.
+
+Please verify:
+- agent container is running
+- Ollama is healthy
+- Docker networking is working"""
+
+            except Exception as e:
+                reply = f"❌ Unexpected Error\n\n{str(e)}"
+
+        st.markdown(reply)
+        st.session_state.messages.append({"role": "assistant", "content": reply})
+
+st.sidebar.markdown("""
+### How to Use
+- **List jobs**: "list jobs" or "what jobs are available"
+- **Trigger one**: "run api health check" or "trigger scraper"
+- **Trigger all**: "run all jobs" or "trigger everything"
+- **Trigger multiple**: "run scraper and git clone" or "trigger health check and scraper"
+- **Check status**: "check status" or "what's the build status"
+
+### Tips
+- Be specific with job names
+- You can ask for multiple jobs in one request
+- Use natural language - I'll understand!
+""")

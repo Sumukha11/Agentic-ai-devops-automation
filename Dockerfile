@@ -19,7 +19,12 @@ RUN /opt/venv/bin/pip install requests yfinance
 
 # Install Jenkins plugins required for pipeline jobs
 # Using jenkins-plugin-cli (bundled in official Jenkins images)
-RUN jenkins-plugin-cli --plugins workflow-job workflow-cps git
+RUN jenkins-plugin-cli --plugins \
+    workflow-job \
+    workflow-cps \
+    workflow-aggregator \
+    pipeline-model-definition \
+    git
 
 # Set venv as default
 ENV PATH="/opt/venv/bin:$PATH"

@@ -1,0 +1,15 @@
+version: '3'
+services:
+  ollama-test:
+    image: ollama/ollama:latest
+    container_name: ollama-test
+    ports:
+      - "11435:11434"
+    volumes:
+      - ollama_test_data:/root/.ollama
+    restart: unless-stopped
+    environment:
+      - OLLAMA_HOST=0.0.0.0:11434
+
+volumes:
+  ollama_test_data:
