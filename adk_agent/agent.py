@@ -96,7 +96,11 @@ def safe_parse_json(response):
         tool = parsed.get("tool", "").strip()
         args = parsed.get("arguments", {})
         
-        valid_tools = ["list_jobs", "trigger_build", "get_status", "get_logs", "chat"]
+        valid_tools = [
+            "list_jobs", "trigger_build", "get_status", "get_logs", "chat",
+            "terraform_init", "terraform_plan", "terraform_apply", "terraform_destroy", 
+            "terraform_output", "terraform_state"
+        ]
         if tool not in valid_tools:
             print(f"⚠️ Invalid tool name: {tool}")
             return {"tool": "chat", "arguments": {"message": f"Unknown tool: {tool}. I only support triggering one job at a time."}}
@@ -164,6 +168,73 @@ def get_jenkins_logs(job_name: str, build_number: int):
         return {"error": f"Failed to get logs: {str(e)}"}
 
 
+def terraform_init_op():
+    """Initialize Terraform."""
+    try:
+        return requests.post(f"{FASTAPI_URL}/terraform/init", timeout=300).json()
+    except Exception as e:
+        return {"error": f"Failed to initialize terraform: {str(e)}"}
+
+
+def terraform_plan_op(var_file: str = "terraform.tfvars"):
+    """Generate Terraform plan."""
+    try:
+        return requests.post(
+            f"{FASTAPI_URL}/terraform/plan",
+            json={"var_file": var_file},
+            timeout=300
+        ).json()
+    except Exception as e:
+        return {"error": f"Failed to plan terraform: {str(e)}"}
+
+
+def terraform_apply_op(auto_approve: bool = False, var_file: str = "terraform.tfvars"):
+    """Apply Terraform configuration."""
+    try:
+        return requests.post(
+            f"{FASTAPI_URL}/terraform/apply",
+            json={"auto_approve": auto_approve, "var_file": var_file},
+            timeout=600
+        ).json()
+    except Exception as e:
+        return {"error": f"Failed to apply terraform: {str(e)}"}
+
+
+def terraform_destroy_op(auto_approve: bool = False, var_file: str = "terraform.tfvars"):
+    """Destroy Terraform infrastructure."""
+    try:
+        return requests.post(
+            f"{FASTAPI_URL}/terraform/destroy",
+            json={"auto_approve": auto_approve, "var_file": var_file},
+            timeout=600
+        ).json()
+    except Exception as e:
+        return {"error": f"Failed to destroy terraform: {str(e)}"}
+
+
+def terraform_output_op():
+    """Get Terraform outputs."""
+    try:
+        return requests.get(
+            f"{FASTAPI_URL}/terraform/output",
+            timeout=30
+        ).json()
+    except Exception as e:
+        return {"error": f"Failed to get terraform output: {str(e)}"}
+
+
+def terraform_state_op():
+    """Get Terraform state."""
+    try:
+        return requests.get(
+            f"{FASTAPI_URL}/terraform/state",
+            timeout=30
+        ).json()
+    except Exception as e:
+        return {"error": f"Failed to get terraform state: {str(e)}"}
+
+
+
 def wait_for_build_completion(job_name, build_number, timeout=60):
     """Wait for build with reduced timeout."""
     start = time.time()
@@ -188,7 +259,7 @@ def wait_for_build_completion(job_name, build_number, timeout=60):
     return "RUNNING"
 
 
-SYSTEM_PROMPT = """You are **Lamma**, an AI-powered DevOps assistant for Jenkins CI/CD automation.
+SYSTEM_PROMPT = """You are **Lamma**, an AI-powered DevOps assistant for Jenkins CI/CD automation and Terraform Infrastructure as Code.
 
 YOUR ONLY JOB: Return ONLY valid JSON. NOTHING ELSE.
 
@@ -203,31 +274,65 @@ YOUR ONLY JOB: Return ONLY valid JSON. NOTHING ELSE.
 2. NEVER RETURN EXAMPLES OR TEMPLATES
    ❌ {"tool": "trigger_build", "arguments": {"job_names": ["Job1", "Job2"]}}
 
-3. VALID TOOLS ONLY:
+3. VALID TOOLS:
+   JENKINS TOOLS:
    - "list_jobs" (show available jobs)
    - "trigger_build" (run ONE job with "job_name" and optional "parameters")
    - "get_status" (check status with "job_name")
    - "get_logs" (get logs with "job_name" and "build_number")
+   
+   TERRAFORM TOOLS:
+   - "terraform_init" (initialize terraform)
+   - "terraform_plan" (preview infrastructure changes with optional "var_file")
+   - "terraform_apply" (deploy infrastructure with optional "auto_approve" and "var_file")
+   - "terraform_destroy" (tear down infrastructure with optional "auto_approve" and "var_file")
+   - "terraform_output" (get deployment outputs)
+   - "terraform_state" (show current infrastructure state)
+   
+   GENERAL:
    - "chat" (conversational response with "message")
 
 4. ARGUMENT RULES:
    - trigger_build: {"job_name": "NAME", "parameters": {"KEY": "VALUE"}} - STRING and optional map
    - get_status: {"job_name": "NAME"}
+   - get_logs: {"job_name": "NAME", "build_number": NUMBER}
    - list_jobs: {}
+   - terraform_init: {}
+   - terraform_plan: {"var_file": "terraform.tfvars"} (optional)
+   - terraform_apply: {"auto_approve": false, "var_file": "terraform.tfvars"} (both optional)
+   - terraform_destroy: {"auto_approve": false, "var_file": "terraform.tfvars"} (both optional)
+   - terraform_output: {}
+   - terraform_state: {}
    - chat: {"message": "TEXT"}
 
-5. MULTI-JOB DETECTION:
+5. MULTI-JOB DETECTION (JENKINS ONLY):
    - Single job only. Do not use batch actions.
+
+6. DECISION LOGIC:
+   - If user mentions: "jenkins", "build", "job", "trigger", "CI/CD" → USE JENKINS TOOLS
+   - If user mentions: "terraform", "infrastructure", "deploy", "IaC", "openstack", "tripleo" → USE TERRAFORM TOOLS
+   - If ambiguous or user asks "what can you do" → ASK if they want Jenkins or Terraform first using chat tool
 
 ═════════════════════════════════════════════════════════════════════════════════
 
 EXAMPLES (output EXACTLY like this):
 
+JENKINS:
 - "list jobs" → {"tool": "list_jobs", "arguments": {}}
 - "run health check" → {"tool": "trigger_build", "arguments": {"job_name": "API-Health-Check"}}
 - "run git clone" → {"tool": "trigger_build", "arguments": {"job_name": "Git-Repository-Clone", "parameters": {"GIT_REPO_URL": "https://github.com/githubtraining/hellogitworld.git"}}}
-- "hi" → {"tool": "chat", "arguments": {"message": "Hello! I can list jobs, trigger a single build, or check status. What would you like?"}}
-- "unclear input" → {"tool": "chat", "arguments": {"message": "I didn't understand. Could you clarify?"}}
+- "check status" → {"tool": "get_status", "arguments": {"job_name": "API-Health-Check"}}
+
+TERRAFORM:
+- "deploy infrastructure" → {"tool": "terraform_init", "arguments": {}}
+- "plan openstack deployment" → {"tool": "terraform_plan", "arguments": {"var_file": "terraform.tfvars"}}
+- "apply terraform" → {"tool": "terraform_apply", "arguments": {"auto_approve": false}}
+- "destroy infrastructure" → {"tool": "terraform_destroy", "arguments": {"auto_approve": false}}
+- "show deployment details" → {"tool": "terraform_output", "arguments": {}}
+
+GENERAL:
+- "hi" → {"tool": "chat", "arguments": {"message": "Hello! I can help with Jenkins CI/CD or Terraform Infrastructure deployment. What would you like to do?"}}
+- "unclear input" → {"tool": "chat", "arguments": {"message": "I can help with:\n\n📦 **Jenkins**: List jobs, trigger builds, check status, view logs\n\n🏗️ **Terraform**: Initialize, plan, apply, destroy OpenStack TripleO infrastructure\n\nWhich would you like to use?"}}
 
 ═════════════════════════════════════════════════════════════════════════════════
 
@@ -235,7 +340,8 @@ REMEMBER:
 - ONLY JSON
 - NO explanations
 - VALIDATE argument keys match tool
-- Use trigger_build (singular) for 1 job only"""
+- Detect intent: Jenkins vs Terraform
+- Ask user to clarify if ambiguous"""
 
 
 def run_agent(user_prompt: str):
@@ -340,6 +446,65 @@ def run_agent(user_prompt: str):
                 "job": requested_job,
                 "build_number": build_number,
                 "logs": logs
+            }
+
+        # TERRAFORM INIT
+        elif tool_name == "terraform_init":
+            tf_result = terraform_init_op()
+            response = {
+                "operation": "terraform_init",
+                "message": "🏗️ Terraform initialized",
+                **tf_result
+            }
+
+        # TERRAFORM PLAN
+        elif tool_name == "terraform_plan":
+            var_file = args.get("var_file", "terraform.tfvars")
+            tf_result = terraform_plan_op(var_file=var_file)
+            response = {
+                "operation": "terraform_plan",
+                "message": "📋 Terraform plan generated - Review the changes before applying",
+                **tf_result
+            }
+
+        # TERRAFORM APPLY
+        elif tool_name == "terraform_apply":
+            auto_approve = args.get("auto_approve", False)
+            var_file = args.get("var_file", "terraform.tfvars")
+            tf_result = terraform_apply_op(auto_approve=auto_approve, var_file=var_file)
+            response = {
+                "operation": "terraform_apply",
+                "message": "🚀 Terraform apply started - OpenStack TripleO infrastructure deployment initiated",
+                **tf_result
+            }
+
+        # TERRAFORM DESTROY
+        elif tool_name == "terraform_destroy":
+            auto_approve = args.get("auto_approve", False)
+            var_file = args.get("var_file", "terraform.tfvars")
+            tf_result = terraform_destroy_op(auto_approve=auto_approve, var_file=var_file)
+            response = {
+                "operation": "terraform_destroy",
+                "message": "🗑️ Terraform destroy started - Infrastructure teardown initiated",
+                **tf_result
+            }
+
+        # TERRAFORM OUTPUT
+        elif tool_name == "terraform_output":
+            tf_result = terraform_output_op()
+            response = {
+                "operation": "terraform_output",
+                "message": "📤 Terraform outputs retrieved",
+                **tf_result
+            }
+
+        # TERRAFORM STATE
+        elif tool_name == "terraform_state":
+            tf_result = terraform_state_op()
+            response = {
+                "operation": "terraform_state",
+                "message": "📊 Terraform state retrieved",
+                **tf_result
             }
 
         # CHAT

@@ -8,7 +8,7 @@ AGENT_URL = os.getenv("AGENT_URL", "http://agent:8100/query")
 st.set_page_config(page_title="AI DevOps Assistant", layout="wide")
 
 st.title("🤖 AI DevOps Assistant")
-st.caption("AI-powered Jenkins Automation & Build Analysis")
+st.caption("AI-powered Jenkins Automation, Terraform IaC & OpenStack TripleO Deployment")
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
@@ -17,7 +17,7 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.markdown(msg["content"])
 
-prompt = st.chat_input("Try: list jobs, run api check, trigger api health check")
+prompt = st.chat_input("Try: 'list jobs' or 'deploy openstack infrastructure'")
 
 if prompt:
     st.session_state.messages.append({"role": "user", "content": prompt})
@@ -130,6 +130,128 @@ You can ask me to check the status anytime!"""
                         info = result.get("info", "Check status anytime!")
                         reply += f"\n---\n\n{info}"
 
+                    elif result.get("operation") == "terraform_init":
+                        status = result.get("status", "UNKNOWN")
+                        message = result.get("message", "")
+                        
+                        if status == "SUCCESS":
+                            reply = f"""✅ **Terraform Initialized**
+
+{message}
+
+---
+
+Ready to plan and deploy OpenStack TripleO infrastructure!"""
+                        else:
+                            error = result.get("error", "Unknown error")
+                            reply = f"❌ **Terraform Init Failed**\n\n{error}"
+
+                    elif result.get("operation") == "terraform_plan":
+                        status = result.get("status", "UNKNOWN")
+                        message = result.get("message", "")
+                        
+                        if status == "SUCCESS":
+                            reply = f"""📋 **Terraform Plan Generated**
+
+{message}
+
+---
+
+**Next Steps:**
+1. Review the plan above
+2. Ask me to apply the changes: "apply terraform"
+3. Or ask me to destroy: "destroy infrastructure"
+
+**Note:** Changes will not be made until you approve the apply operation."""
+                        else:
+                            error = result.get("error", "Unknown error")
+                            reply = f"❌ **Terraform Plan Failed**\n\n{error}"
+
+                    elif result.get("operation") == "terraform_apply":
+                        status = result.get("status", "UNKNOWN")
+                        message = result.get("message", "")
+                        
+                        if status == "SUCCESS":
+                            reply = f"""🚀 **Infrastructure Deployed Successfully!**
+
+{message}
+
+**Status:** ✅ OpenStack TripleO deployment complete
+
+---
+
+**Next Steps:**
+- Ask me to check outputs: "show terraform outputs"
+- Ask me to check state: "show terraform state"
+- Ask me to destroy: "destroy infrastructure"
+
+The VMs and network infrastructure should now be provisioned."""
+                        elif status == "TIMEOUT":
+                            reply = f"""⚠️ **Terraform Apply Timeout**
+
+{message}
+
+**Note:** The deployment may still be in progress. Check back in a few minutes or ask me to show the current state."""
+                        else:
+                            error = result.get("error", "Unknown error")
+                            reply = f"❌ **Terraform Apply Failed**\n\n{error}"
+
+                    elif result.get("operation") == "terraform_destroy":
+                        status = result.get("status", "UNKNOWN")
+                        message = result.get("message", "")
+                        
+                        if status == "SUCCESS":
+                            reply = f"""🗑️ **Infrastructure Destroyed Successfully!**
+
+{message}
+
+**Status:** ✅ All resources have been cleaned up
+
+---
+
+Ready to deploy new infrastructure or perform other operations."""
+                        elif status == "TIMEOUT":
+                            reply = f"""⚠️ **Terraform Destroy Timeout**
+
+{message}
+
+**Note:** The teardown may still be in progress. Check back in a few minutes."""
+                        else:
+                            error = result.get("error", "Unknown error")
+                            reply = f"❌ **Terraform Destroy Failed**\n\n{error}"
+
+                    elif result.get("operation") == "terraform_output":
+                        status = result.get("status", "UNKNOWN")
+                        outputs = result.get("outputs", {})
+                        
+                        if status == "SUCCESS" and outputs:
+                            reply = "📤 **Terraform Outputs**\n\n"
+                            for key, value in outputs.items():
+                                if isinstance(value, dict):
+                                    val = value.get("value", value)
+                                else:
+                                    val = value
+                                reply += f"**{key}:**\n```\n{json.dumps(val, indent=2)}\n```\n\n"
+                        else:
+                            reply = f"📤 **Terraform Outputs**\n\n{result.get('stdout', 'No outputs found')}"
+
+                    elif result.get("operation") == "terraform_state":
+                        status = result.get("status", "UNKNOWN")
+                        resources_count = result.get("resources_count", 0)
+                        resource_types = result.get("resource_types", [])
+                        
+                        if status == "SUCCESS":
+                            reply = f"""📊 **Terraform State**
+
+**Resources Managed:** {resources_count}
+
+**Resource Types:**
+"""
+                            for rtype in resource_types:
+                                reply += f"- `{rtype}`\n"
+                        else:
+                            reply = f"❌ **Failed to retrieve state**\n\n{result.get('error', 'Unknown error')}"
+
                     elif "message" in result:
                         reply = f"ℹ️ {result['message']}"
 
@@ -167,12 +289,25 @@ Please verify:
 
 st.sidebar.markdown("""
 ### How to Use
+
+#### 📦 **Jenkins CI/CD**
 - **List jobs**: "list jobs" or "what jobs are available"
 - **Trigger one**: "run api health check" or "trigger scraper"
 - **Check status**: "check status" or "what's the build status"
+- **View logs**: "show logs for job X"
+
+#### 🏗️ **Terraform Infrastructure**
+- **Initialize**: "initialize terraform" or "setup terraform"
+- **Plan**: "plan openstack deployment" or "preview infrastructure"
+- **Apply**: "deploy infrastructure" or "apply terraform"
+- **Destroy**: "destroy infrastructure" or "tear down openstack"
+- **Show outputs**: "show deployment details" or "terraform outputs"
+- **Show state**: "show infrastructure state" or "terraform state"
 
 ### Tips
-- Be specific with job names
-- Only one job can be triggered at a time
-- Use natural language - I'll understand!
+- Be specific with job names (Jenkins)
+- Ask about infrastructure changes (Terraform shows you what will change before applying)
+- Use natural language - I understand both Jenkins and Terraform contexts!
+- Only one Jenkins job can be triggered at a time
 """)
+

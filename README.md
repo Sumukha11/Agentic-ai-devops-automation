@@ -1,31 +1,93 @@
 # IITP 3rd Semester Project: Agentic AI DevOps Tools - Complete Architecture Documentation
 
-**Project Title:** Agentic AI DevOps Tools with Jenkins Automation  
-**Version:** 2.0  
-**Last Updated:** April 2026  
-**Technology Stack:** Docker, Kubernetes-style Orchestration, FastAPI, Streamlit, Ollama LLM, Jenkins CI/CD
+**Project Title:** Agentic AI DevOps Tools with Jenkins Automation & Terraform IaC  
+**Version:** 3.0  
+**Last Updated:** May 2026  
+**Technology Stack:** Docker, Kubernetes-style Orchestration, FastAPI, Streamlit, Ollama LLM, Jenkins CI/CD, Terraform, OpenStack TripleO
 
 ---
 
 ## Table of Contents
 
-1. [Recent Updates & Improvements](#recent-updates--improvements)
-2. [Project Overview](#project-overview)
-3. [Architecture Diagram](#architecture-diagram)
-4. [System Components](#system-components)
-5. [Data Flow](#data-flow)
-6. [Technology Stack Details](#technology-stack-details)
-7. [Deployment & Orchestration](#deployment--orchestration)
-8. [API Specifications](#api-specifications)
-9. [LLM Integration](#llm-integration)
-10. [Security & Configuration](#security--configuration)
-11. [Troubleshooting Guide](#troubleshooting-guide)
+1. [🆕 Terraform Integration (NEW)](#terraform-integration-new)
+2. [Recent Updates & Improvements](#recent-updates--improvements)
+3. [Project Overview](#project-overview)
+4. [Architecture Diagram](#architecture-diagram)
+5. [System Components](#system-components)
+6. [Data Flow](#data-flow)
+7. [Technology Stack Details](#technology-stack-details)
+8. [Deployment & Orchestration](#deployment--orchestration)
+9. [API Specifications](#api-specifications)
+10. [LLM Integration](#llm-integration)
+11. [Security & Configuration](#security--configuration)
+12. [Troubleshooting Guide](#troubleshooting-guide)
+
+---
+
+## 🆕 Terraform Integration (NEW)
+
+**Version 3.0 now includes Terraform support for OpenStack TripleO infrastructure deployment!**
+
+### What's New
+- **Dual-Mode Operation:** Choose between Jenkins CI/CD or Terraform IaC based on your needs
+- **Natural Language Routing:** Agent automatically routes to Jenkins or Terraform based on your intent
+- **Infrastructure as Code:** Deploy and manage OpenStack TripleO clusters via Terraform
+- **Streamlined UI:** Terraform operations integrated into existing Streamlit interface
+
+### Quick Start
+```
+User: "deploy openstack infrastructure"
+→ Agent initializes Terraform and creates deployment plan
+
+User: "show terraform outputs"  
+→ Agent retrieves deployment endpoints and IPs
+
+User: "destroy infrastructure"
+→ Agent tears down all managed resources
+```
+
+**📖 [Complete Terraform Integration Guide](documentation/TERRAFORM_INTEGRATION.md)**
+
+### Key Features
+- ✅ Initialize Terraform working directory
+- ✅ Plan infrastructure changes before applying
+- ✅ Deploy OpenStack TripleO architecture
+- ✅ Monitor deployment state
+- ✅ Retrieve deployment outputs (IPs, endpoints)
+- ✅ Teardown infrastructure on demand
+
+### Supported Terraform Operations
+| Operation | Command | Use Case |
+|-----------|---------|----------|
+| `init` | "initialize terraform" | Setup Terraform working directory |
+| `plan` | "plan deployment" | Preview infrastructure changes |
+| `apply` | "deploy infrastructure" | Create/update OpenStack resources |
+| `destroy` | "destroy infrastructure" | Remove all managed resources |
+| `output` | "show deployment details" | Get IPs, endpoints, connection info |
+| `state` | "show terraform state" | View managed resources |
 
 ---
 
 ## Recent Updates & Improvements
 
-### Version 2.1 - May 2026 - Comprehensive Fixes & Optimizations
+### Version 3.0 - May 2026 - Terraform Infrastructure Integration
+
+#### ✨ New Features:
+- **Terraform Client** (`fast_api/terraform_client.py`) - Handles all terraform operations
+- **6 New FastAPI Endpoints** - `/terraform/init`, `/terraform/plan`, `/terraform/apply`, `/terraform/destroy`, `/terraform/output`, `/terraform/state`
+- **6 New Agent Tools** - terraform_init, terraform_plan, terraform_apply, terraform_destroy, terraform_output, terraform_state
+- **Intent Detection** - Automatically routes Jenkins vs Terraform requests
+- **Enhanced UI** - Terraform operation visualization in Streamlit
+
+#### 🔧 Key Improvements:
+- **Smart Routing:** Agent determines Jenkins or Terraform based on keywords and context
+- **Timeout Handling:** Terraform operations can take 10+ minutes with proper timeout handling
+- **State Management:** Track and display infrastructure state
+- **Output Display:** Show deployment endpoints and configuration details
+
+---
+
+### Version 2.1 - April 2026 - Comprehensive Fixes & Optimizations
 
 #### ✅ 1. **Timeout Issues - RESOLVED**
 **Problem:** Streamlit UI timing out after 180 seconds  
