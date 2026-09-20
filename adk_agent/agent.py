@@ -5,6 +5,8 @@ import time
 import traceback
 import difflib
 import re
+import subprocess
+import shutil
 from langchain_ollama import OllamaLLM
 
 FASTAPI_URL = os.getenv("FASTAPI_URL", "http://fastapi:8000")
@@ -110,19 +112,131 @@ def safe_parse_json(response):
         return {"tool": "chat", "arguments": {"message": "I couldn't process that. Could you rephrase?"}}
 
 
+ACTION_WORDS = {
+    "api", "all", "available", "build", "building", "check", "health", "job", "jobs",
+    "list", "run", "show", "status", "trigger", "please", "the", "and", "for", "of",
+    "fetch", "clone", "scraper", "repository", "stock", "yahoo", "github", "google",
+    "pipeline", "service", "services"
+}
+
+
 def find_best_job_match(user_input, available_jobs):
-    """Find closest matching job name."""
+    """Find closest matching job name while ignoring trigger/list commands and common words."""
     if not available_jobs:
         return None
 
-    normalized_input = re.sub(r"[^a-zA-Z0-9]", "", user_input).lower()
-    normalized_jobs = {
-        re.sub(r"[^a-zA-Z0-9]", "", job).lower(): job
-        for job in available_jobs
-    }
+    normalized_jobs = {}
+    for job in available_jobs:
+        if not job:
+            continue
+        compact = re.sub(r"[^a-zA-Z0-9]", "", job).lower()
+        normalized_jobs[compact] = job
 
-    matches = difflib.get_close_matches(normalized_input, normalized_jobs.keys(), n=1, cutoff=0.4)
-    return normalized_jobs[matches[0]] if matches else None
+        tokens = [token.lower() for token in re.split(r"[^a-zA-Z0-9]+", job) if token]
+        meaningful = "".join(token for token in tokens if token not in ACTION_WORDS)
+        if meaningful:
+            normalized_jobs[meaningful] = job
+
+    if not normalized_jobs:
+        return None
+
+    user_phrase = re.sub(r"[^a-zA-Z0-9]+", " ", user_input).strip().lower()
+    search_terms = [user_phrase]
+
+    meaningful_tokens = [token for token in user_phrase.split() if token and token not in ACTION_WORDS]
+    if meaningful_tokens:
+        search_terms.append("".join(meaningful_tokens))
+        search_terms.append(" ".join(meaningful_tokens))
+
+    for term in search_terms:
+        compact_term = re.sub(r"[^a-zA-Z0-9]", "", term).lower()
+        if compact_term in normalized_jobs:
+            return normalized_jobs[compact_term]
+
+        matches = difflib.get_close_matches(compact_term, list(normalized_jobs.keys()), n=1, cutoff=0.5)
+        if matches:
+            return normalized_jobs[matches[0]]
+
+    # Final fallback: compare the job names themselves without extra action words.
+    base_candidates = [
+        re.sub(r"[^a-zA-Z0-9]", "", job).lower()
+        for job in available_jobs
+        if job
+    ]
+    matches = difflib.get_close_matches(
+        re.sub(r"[^a-zA-Z0-9]", "", user_phrase).lower(),
+        base_candidates,
+        n=1,
+        cutoff=0.4
+    )
+    if matches:
+        for job in available_jobs:
+            if re.sub(r"[^a-zA-Z0-9]", "", job).lower() == matches[0]:
+                return job
+
+    return None
+
+
+def list_terraform_jobs():
+    project_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "terraform", "local-docker-stack")
+    return [
+        {
+            "name": "Prometheus-Server-Deploy",
+            "path": project_dir,
+            "description": "Deploy a Prometheus monitoring server in a Docker container, separate from the existing Docker Compose agent stack.",
+            "type": "terraform"
+        }
+    ]
+
+
+def run_terraform_deploy(terraform_name: str):
+    project_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "terraform", "local-docker-stack")
+    if not os.path.isdir(project_dir):
+        return {"error": f"Terraform project not found: {project_dir}"}
+
+    if not shutil.which("terraform"):
+        return {"error": "Terraform is not installed on this system. Install Terraform CLI to deploy the local Docker stack."}
+
+    try:
+        init = subprocess.run(
+            ["terraform", "-chdir=" + project_dir, "init"],
+            capture_output=True,
+            text=True,
+            timeout=600,
+            check=False,
+        )
+        if init.returncode != 0:
+            return {"error": "Terraform init failed", "details": init.stderr or init.stdout}
+
+        apply = subprocess.run(
+            ["terraform", "-chdir=" + project_dir, "apply", "-auto-approve"],
+            capture_output=True,
+            text=True,
+            timeout=1200,
+            check=False,
+        )
+        if apply.returncode != 0:
+            return {"error": "Terraform apply failed", "details": apply.stderr or apply.stdout}
+
+        output = subprocess.run(
+            ["terraform", "-chdir=" + project_dir, "output", "-json"],
+            capture_output=True,
+            text=True,
+            timeout=300,
+            check=False,
+        )
+
+        return {
+            "status": "DEPLOYED",
+            "job": terraform_name,
+            "message": "Free local Docker DevOps stack deployed successfully with Terraform.",
+            "terraform_output": output.stdout if output.returncode == 0 else None,
+            "details": apply.stdout or "Deployment completed."
+        }
+    except subprocess.TimeoutExpired as exc:
+        return {"error": "Terraform apply timed out", "details": str(exc)}
+    except Exception as exc:
+        return {"error": f"Failed to deploy Terraform job: {str(exc)}"}
 
 
 def list_jenkins_jobs():
@@ -254,18 +368,23 @@ def run_agent(user_prompt: str):
         # LIST JOBS
         if tool_name == "list_jobs":
             jobs_result = list_jenkins_jobs()
+            terraform_jobs = list_terraform_jobs()
             response = {
-                "message": "Here are the available Jenkins jobs.",
-                "jobs": jobs_result.get("jobs", [])
+                "message": "Here are the available Jenkins jobs and Terraform deployment scripts.",
+                "jobs": jobs_result.get("jobs", []),
+                "terraform_scripts": terraform_jobs
             }
 
         # TRIGGER SINGLE BUILD
         elif tool_name == "trigger_build":
             jobs_result = list_jenkins_jobs()
             available_jobs = jobs_result.get("jobs", [])
+            terraform_jobs = list_terraform_jobs()
+            terraform_names = [item["name"] for item in terraform_jobs]
+            all_jobs = available_jobs + terraform_names
             requested_job = args.get("job_name", "").strip()
             parameters = args.get("parameters") if isinstance(args.get("parameters"), dict) else None
-            matched_job = find_best_job_match(requested_job, available_jobs)
+            matched_job = find_best_job_match(requested_job, all_jobs)
 
             if not requested_job:
                 response = {
@@ -273,27 +392,40 @@ def run_agent(user_prompt: str):
                 }
             elif not matched_job:
                 response = {
-                    "message": f"Could not find job matching '{requested_job}'. Available: {available_jobs}",
-                    "available_jobs": available_jobs
+                    "message": f"Could not find job matching '{requested_job}'. Available jobs: {available_jobs} | Terraform scripts: {terraform_names}",
+                    "available_jobs": available_jobs,
+                    "terraform_scripts": terraform_jobs
                 }
             else:
-                build_result = trigger_jenkins_build(matched_job, parameters=parameters)
-                
-                if "error" in build_result:
+                if matched_job in terraform_names:
+                    deployment_result = run_terraform_deploy(matched_job)
                     response = {
-                        "message": f"Failed to trigger: {build_result['error']}",
-                        "job": matched_job
-                    }
-                else:
-                    build_number = build_result.get("build_number")
-                    response = {
-                        "message": "✅ Build triggered!",
+                        "message": deployment_result.get("message", "Terraform deployment result."),
                         "job": matched_job,
-                        "build_number": build_number,
-                        "status": build_result.get("status", "TRIGGERED"),
-                        "parameters": parameters,
-                        "info": f"Build #{build_number} queued. Use 'check status {matched_job}' to monitor."
+                        "status": deployment_result.get("status", "ERROR"),
+                        "details": deployment_result.get("details"),
+                        "terraform_scripts": terraform_jobs
                     }
+                    if deployment_result.get("error") is not None:
+                        response["error"] = deployment_result.get("error")
+                else:
+                    build_result = trigger_jenkins_build(matched_job, parameters=parameters)
+                    
+                    if "error" in build_result:
+                        response = {
+                            "message": f"Failed to trigger: {build_result['error']}",
+                            "job": matched_job
+                        }
+                    else:
+                        build_number = build_result.get("build_number")
+                        response = {
+                            "message": "✅ Build triggered!",
+                            "job": matched_job,
+                            "build_number": build_number,
+                            "status": build_result.get("status", "TRIGGERED"),
+                            "parameters": parameters,
+                            "info": f"Build #{build_number} queued. Use 'check status {matched_job}' to monitor."
+                        }
 
         # GET STATUS
         elif tool_name == "get_status":

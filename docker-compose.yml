@@ -44,8 +44,10 @@ services:
     ports:
       - "8000:8000"
     depends_on:
-      - jenkins
-      - jenkins-init
+      jenkins:
+        condition: service_started
+      jenkins-init:
+        condition: service_completed_successfully
     volumes:
       - jenkins_data:/var/jenkins_home
       - ./:/workspace
@@ -126,9 +128,12 @@ services:
     environment:
       - FASTAPI_URL=http://fastapi:8000
       - OLLAMA_URL=http://ollama:11434
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - TF_VAR_prometheus_config_path=/home/sumukha/Desktop/IITP-Project/Agentic-ai-devops-automation/terraform/local-docker-stack/prometheus/prometheus.yml
     restart: unless-stopped
     volumes:
       - ./:/workspace
+      - /var/run/docker.sock:/var/run/docker.sock
   streamlit:
     build:
       context: ./streamlit

@@ -1,9 +1,9 @@
-# IITP 3rd Semester Project: Agentic AI DevOps Tools - Complete Architecture Documentation
+# IITP 3rd Semester Project: Agentic AI DevOps Tools - Current Architecture Documentation
 
 **Project Title:** Agentic AI DevOps Tools with Jenkins Automation  
-**Version:** 2.0  
-**Last Updated:** April 2026  
-**Technology Stack:** Docker, Kubernetes-style Orchestration, FastAPI, Streamlit, Ollama LLM, Jenkins CI/CD
+**Version:** 3.0  
+**Last Updated:** September 2026  
+**Technology Stack:** Docker Compose, FastAPI, Streamlit, Ollama LLM, Jenkins CI/CD, Terraform, Prometheus
 
 ---
 
@@ -23,7 +23,80 @@
 
 ---
 
+## Current Architecture Snapshot (September 2026)
+
+The system currently runs as a Docker Compose stack with the following active services:
+
+- Jenkins: CI/CD automation and job orchestration
+- FastAPI: REST interface for job listing, status, logs, and build triggering
+- Ollama: local LLM runtime serving the Llama 3 model
+- Agent: AI orchestration layer that interprets natural-language prompts and executes Jenkins/Terraform actions
+- Streamlit UI: human-facing chat interface for requests and responses
+- Terraform showcase: Prometheus server deployment running in Docker using the `kreuzwerker/docker` provider
+
+### Key Deployment Pattern
+
+The main project stack remains independent from the Terraform showcase deployment. The Terraform deployment is intentionally separate and is used to provision a demo/monitoring application in Docker rather than duplicating the core AI DevOps stack.
+
+The agent container is explicitly mounted to the Docker socket so Terraform running inside the container can reach the host Docker daemon and create/operate Docker resources such as the Prometheus container and its network.
+
+### Runtime Endpoints
+
+- Jenkins UI: http://localhost:8080
+- FastAPI API: http://localhost:8000
+- Streamlit UI: http://localhost:8501
+- Ollama API: http://localhost:11434
+- Prometheus UI: http://localhost:9090
+
+---
+
 ## Recent Updates & Improvements
+
+### Version 3.0 - September 2026 - Terraform Prometheus Deployment & Deployment Fixes
+
+#### ✅ 1. **Prometheus deployment added as the Terraform showcase app**
+**Problem:** The project originally had a generic demo deployment, but the user wanted a publicly useful monitoring service rather than a non-functional scaffold.
+
+**Current state:**
+- Terraform project: `terraform/local-docker-stack`
+- Deployment target: Prometheus Docker container
+- Script name: `Prometheus-Server-Deploy`
+- Port exposed: `9090`
+- Runtime URL: `http://localhost:9090`
+
+**Current Terraform flow:**
+- create Docker network `prometheus-net`
+- create Prometheus container from `prom/prometheus:latest`
+- mount the config file from the host path into the container
+- expose port 9090
+
+#### ✅ 2. **Docker socket access added for agent-driven Terraform**
+**Problem:** Terraform inside the agent container could not reach the host Docker daemon.
+
+**Fix applied:**
+- mounted `/var/run/docker.sock` into the agent service
+- set `DOCKER_HOST=unix:///var/run/docker.sock`
+- passed the host configuration path using `TF_VAR_prometheus_config_path`
+
+This is required because Docker bind mounts must use a host absolute path, not a container-internal path.
+
+#### ✅ 3. **Terraform config hardened for real deployment runs**
+**Problem:** Repeated deploy attempts failed because stale Docker networks and containers were left behind from earlier failed runs.
+
+**Fix applied:**
+- cleaned up stale state between reprovisioning
+- ensured Prometheus config path uses the actual host path
+- ensured network naming is stable and explicit
+
+#### ✅ 4. **Agent and Streamlit now present Terraform jobs as first-class runnable actions**
+The agent lists Terraform jobs alongside Jenkins jobs and maps natural-language requests such as:
+- “run the Prometheus server deploy”
+- “deploy prometheus server”
+- “terraform script to deploy prometheus”
+
+These requests are routed to the Prometheus Terraform deployment.
+
+---
 
 ### Version 2.1 - May 2026 - Comprehensive Fixes & Optimizations
 

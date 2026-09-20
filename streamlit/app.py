@@ -47,16 +47,49 @@ if prompt:
 
                 if isinstance(result, dict):
 
-                    if "error" in result:
-                        reply = f"❌ **Error**\n\n{result['error']}"
+                    error_value = result.get("error")
+                    status_value = result.get("status")
+
+                    if error_value is not None and str(error_value).strip() not in ("", "None"):
+                        reply = f"❌ **Error**\n\n{error_value}"
+
+                    elif status_value == "DEPLOYED":
+                        job_name = result.get("job", "Prometheus-Server-Deploy")
+                        message = result.get("message", "The Prometheus server deployment was completed successfully.")
+                        reply = f"""✅ **Deployment Successful**
+
+### 🚀 Application
+`{job_name}`
+
+### 📍 Access URL
+`http://localhost:9090`
+
+### 📊 Status
+`{status_value}`
+
+---
+
+{message}
+
+The Prometheus server is now running and ready to open in your browser."""
 
                     elif "jobs" in result:
                         jobs = result.get("jobs", [])
+                        terraform_scripts = result.get("terraform_scripts", [])
                         reply = "📋 **Available Jenkins Jobs**\n\n"
                         for job in jobs:
                             reply += f"- `{job}`\n"
+                        if terraform_scripts:
+                            reply += "\n## ☁️ Terraform Scripts\n\n"
+                            for item in terraform_scripts:
+                                name = item.get("name", "Unknown Terraform Script")
+                                desc = item.get("description", "")
+                                reply += f"- `{name}`"
+                                if desc:
+                                    reply += f" - {desc}"
+                                reply += "\n"
 
-                    elif result.get("status") in ["QUEUED", "TRIGGERED"]:
+                    elif status_value in ["QUEUED", "TRIGGERED"]:
                         job_name = result.get("job", "Unknown Job")
                         build_number = result.get("build_number", "N/A")
                         info = result.get("info", "")

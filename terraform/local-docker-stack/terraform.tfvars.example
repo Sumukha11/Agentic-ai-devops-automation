@@ -1,0 +1,5 @@
+docker_network_name = "devops-net"
+jenkins_port = 8080
+fastapi_port = 8000
+streamlit_port = 8501
+ollama_port = 11434
