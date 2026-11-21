@@ -1,9 +1,9 @@
 # IITP 3rd Semester Project: Agentic AI DevOps Tools - Current Architecture Documentation
 
 **Project Title:** Agentic AI DevOps Tools with Jenkins Automation  
-**Version:** 3.0  
-**Last Updated:** September 2026  
-**Technology Stack:** Docker Compose, FastAPI, Streamlit, Ollama LLM, Jenkins CI/CD, Terraform, Prometheus
+**Version:** 4.0  
+**Last Updated:** 21 November 2026  
+**Technology Stack:** Docker Compose, FastAPI, Streamlit, Ollama/Qwen 2.5, Jenkins CI/CD, Terraform, Prometheus, Kind Kubernetes, Grafana
 
 ---
 
@@ -23,16 +23,18 @@
 
 ---
 
-## Current Architecture Snapshot (September 2026)
+## Current Architecture Snapshot (November 2026)
 
-The system currently runs as a Docker Compose stack with the following active services:
+The system runs as a Docker Compose stack with the following active capabilities:
 
-- Jenkins: CI/CD automation and job orchestration
-- FastAPI: REST interface for job listing, status, logs, and build triggering
-- Ollama: local LLM runtime serving the Llama 3 model
-- Agent: AI orchestration layer that interprets natural-language prompts and executes Jenkins/Terraform actions
-- Streamlit UI: human-facing chat interface for requests and responses
-- Terraform showcase: Prometheus server deployment running in Docker using the `kreuzwerker/docker` provider
+- Jenkins: CI/CD automation and canonical pipeline job orchestration
+- FastAPI: REST interface for Jenkins jobs, status, logs, and build triggering
+- Ollama: local LLM runtime serving `qwen2.5:3b` for fast deterministic tool routing
+- Agent: AI orchestration layer for Jenkins and Terraform actions
+- Streamlit: human-facing chat interface
+- Prometheus: separate Terraform/Docker monitoring deployment
+- Kind: local Kubernetes cluster named `devops-grafana`
+- Grafana: Kubernetes application in the `monitoring` namespace
 
 ### Key Deployment Pattern
 
@@ -47,10 +49,65 @@ The agent container is explicitly mounted to the Docker socket so Terraform runn
 - Streamlit UI: http://localhost:8501
 - Ollama API: http://localhost:11434
 - Prometheus UI: http://localhost:9090
+- Grafana UI: http://localhost:3000
 
 ---
 
 ## Recent Updates & Improvements
+
+### Version 4.0 - November 2026 - Kubernetes, Grafana, Jenkins Reconciliation, and Faster Ollama
+
+#### 1. Kind Kubernetes and Grafana deployment
+The AI agent can now create a local Kubernetes cluster and deploy Grafana through Terraform.
+
+- Terraform project: `terraform/kubernetes-grafana-stack`
+- Kubernetes implementation: Kind (Kubernetes in Docker)
+- Cluster name: `devops-grafana`
+- Grafana namespace: `monitoring`
+- Grafana service: NodePort `30080`, mapped to host port `3000`
+- Runtime URL: `http://localhost:3000`
+- Default credentials: `admin` / `admin`
+- Natural-language examples: `deploy Grafana on a Kubernetes cluster`, `destroy the Kubernetes Grafana deployment`
+
+The Kind control plane and kubectl binaries run inside the agent toolchain. Grafana manifests are applied directly inside the Kind control-plane container to avoid unreliable host-to-container API routing.
+
+#### 2. Jenkins canonical job reconciliation
+Job initialization now reconciles the Jenkins catalog to three canonical pipeline jobs:
+
+- `API-Health-Check`
+- `Git-Repository-Clone`
+- `Yahoo-Stock-Scraper`
+
+Legacy names such as `Api-Healcheck`, `Git-Repo-Clone`, and `Yahoo-Scraper` are removed. Canonical jobs are updated from the Groovy pipeline files in `Jenkins/`, and job descriptions are written into Jenkins XML configuration.
+
+#### 3. Faster and more reliable Jenkins triggering
+Jenkins triggering no longer waits for build completion. FastAPI returns a queue response immediately, while Jenkins assigns a build number after the build starts.
+
+- Status values include `QUEUED`, `TRIGGERED`, `RUNNING`, `SUCCESS`, and `FAILURE`
+- UI no longer reports a build as `Build #None`
+- Status requests can check one job or all Jenkins jobs
+- `trigger_builds` supports multiple or all-job requests
+
+#### 4. Ollama model optimization
+The agent's default free local model changed from `llama3` to `qwen2.5:3b`.
+
+- Model: `qwen2.5:3b`
+- Purpose: fast, local, deterministic JSON tool routing
+- Context window: 2048 tokens
+- Maximum generated routing output: 160 tokens
+- Temperature: `0`
+- Ollama keep-alive: `24h`
+- Startup pre-load: wait script verifies the model, then agent startup warmup loads it
+
+This 3B model significantly reduces cold-start and inference latency compared with larger general-purpose models while remaining suitable for the project's strict tool-routing workflow.
+
+#### 5. Streamlit and Docker updates
+- Streamlit displays Grafana URL and credentials after Kubernetes deployment.
+- Agent and wait services use `OLLAMA_MODEL=qwen2.5:3b`.
+- Agent container mounts Docker CLI and Docker socket for Kind and Terraform operations.
+- Docker Compose pre-pulls Qwen with the `ollama-puller` service.
+
+---
 
 ### Version 3.0 - September 2026 - Terraform Prometheus Deployment & Deployment Fixes
 
@@ -823,7 +880,7 @@ volumes:
 └────────────┬──────────────────────────────────────────────┘
              │
 ┌────────────▼──────────────────────────────────────────────┐
-│ 3. AGENT → FASTAPI BACKEND                               │
+│ 3. AGENT → FASTAPI                                     │
 │    GET http://fastapi:8000/jobs                          │
 └────────────┬──────────────────────────────────────────────┘
              │
@@ -1222,8 +1279,7 @@ Two-tier Integration:
     └─ Layer 2: Direct HTTP API (Fallback)
         ├─ /api/generate              # Native Ollama endpoint
         ├─ /v1/completions            # OpenAI-compatible
-        ├─ /v1/chat/completions       # Chat format
-        └─ /api/completions           # Alternative
+        ├─ /v1/chat/completions       # OpenAI-compatible
 
 Response Parsing:
     ├─ Extract text field

@@ -85,7 +85,6 @@ def trigger_build(job_name, parameters=None):
         }
 
         if parameters:
-            # Jenkins buildWithParameters supports URL-encoded parameters on POST
             url = f"{JENKINS_URL}/job/{job_name}/buildWithParameters"
             params = {k: str(v) for k, v in parameters.items()}
         else:
@@ -98,40 +97,28 @@ def trigger_build(job_name, parameters=None):
             auth=get_auth(),
             headers=headers,
             params=params,
-            allow_redirects=False
+            allow_redirects=False,
+            timeout=10,
         )
 
         if error:
             return error
 
+        if response.status_code not in (201, 202, 302):
+            return {
+                "error": f"Jenkins rejected build trigger with HTTP {response.status_code}",
+                "details": response.text[:300],
+            }
+
         queue_url = response.headers.get("Location")
 
-        if not queue_url:
-            return {"error": "Queue location not found from Jenkins"}
-
-        for _ in range(20):
-            time.sleep(3)
-
-            q_res, q_err = safe_request(
-                "GET",
-                f"{queue_url}api/json",
-                auth=get_auth()
-            )
-
-            if q_err:
-                continue
-
-            q_data = q_res.json()
-
-            if "executable" in q_data:
-                return {
-                    "status": "TRIGGERED",
-                    "job": job_name,
-                    "build_number": q_data["executable"]["number"],
-                    "parameters": parameters if parameters else None
-                }
-
-        return {"error": "Timeout waiting for build to start"}
+        return {
+            "status": "QUEUED",
+            "job": job_name,
+            "build_number": None,
+            "queue_url": queue_url,
+            "parameters": parameters if parameters else None,
+        }
 
     except Exception as e:
         return {"error": str(e)}

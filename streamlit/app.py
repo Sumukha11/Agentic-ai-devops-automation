@@ -55,8 +55,32 @@ if prompt:
 
                     elif status_value == "DEPLOYED":
                         job_name = result.get("job", "Prometheus-Server-Deploy")
-                        message = result.get("message", "The Prometheus server deployment was completed successfully.")
-                        reply = f"""✅ **Deployment Successful**
+                        message = result.get("message", "The deployment completed successfully.")
+                        if job_name == "Kubernetes-Grafana-Deploy":
+                            access_url = result.get("grafana_url", "http://localhost:3000")
+                            credentials = result.get("credentials", {})
+                            reply = f"""✅ **Deployment Successful**
+
+### 🚀 Application
+`{job_name}`
+
+### 📍 Access URL
+`{access_url}`
+
+### 👤 Grafana Credentials
+- Username: `{credentials.get('username', 'admin')}`
+- Password: `{credentials.get('password', 'admin')}`
+
+### 📊 Status
+`{status_value}`
+
+---
+
+{message}
+
+Grafana is running inside the `monitoring` namespace."""
+                        else:
+                            reply = f"""✅ **Deployment Successful**
 
 ### 🚀 Application
 `{job_name}`

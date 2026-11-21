@@ -1,9 +1,9 @@
 # IITP 3rd Semester Project: Agentic AI DevOps Tools - Current Architecture Documentation
 
 **Project Title:** Agentic AI DevOps Tools with Jenkins Automation  
-**Version:** 3.0  
-**Last Updated:** September 2026  
-**Technology Stack:** Docker Compose, FastAPI, Streamlit, Ollama LLM, Jenkins CI/CD, Terraform, Prometheus
+**Version:** 4.0  
+**Last Updated:** 21 November 2026  
+**Technology Stack:** Docker Compose, FastAPI, Streamlit, Ollama/Qwen 2.5, Jenkins CI/CD, Terraform, Prometheus, Kind Kubernetes, Grafana
 
 ---
 
@@ -23,34 +23,50 @@
 
 ---
 
-## Current Architecture Snapshot (September 2026)
+## Current Architecture Snapshot (November 2026)
 
-The system currently runs as a Docker Compose stack with the following active services:
+The system runs as a Docker Compose stack with the following active capabilities:
 
-- Jenkins: CI/CD automation and job orchestration
-- FastAPI: REST interface for job listing, status, logs, and build triggering
-- Ollama: local LLM runtime serving the Llama 3 model
-- Agent: AI orchestration layer that interprets natural-language prompts and executes Jenkins/Terraform actions
-- Streamlit UI: human-facing chat interface for requests and responses
-- Terraform showcase: Prometheus server deployment running in Docker using the `kreuzwerker/docker` provider
-
-### Key Deployment Pattern
-
-The main project stack remains independent from the Terraform showcase deployment. The Terraform deployment is intentionally separate and is used to provision a demo/monitoring application in Docker rather than duplicating the core AI DevOps stack.
-
-The agent container is explicitly mounted to the Docker socket so Terraform running inside the container can reach the host Docker daemon and create/operate Docker resources such as the Prometheus container and its network.
-
-### Runtime Endpoints
-
-- Jenkins UI: http://localhost:8080
-- FastAPI API: http://localhost:8000
-- Streamlit UI: http://localhost:8501
-- Ollama API: http://localhost:11434
-- Prometheus UI: http://localhost:9090
+- Jenkins: CI/CD automation and canonical pipeline job orchestration
+- FastAPI: REST interface for Jenkins jobs, status, logs, and build triggering
+- Ollama: local LLM runtime serving `qwen2.5:3b` for fast deterministic tool routing
+- Agent: AI orchestration layer for Jenkins and Terraform actions
+- Streamlit: human-facing chat interface
+- Prometheus: separate Terraform/Docker monitoring deployment
+- Kind: local Kubernetes cluster named `devops-grafana`
+- Grafana: Kubernetes application in the `monitoring` namespace
 
 ---
 
 ## Recent Updates & Improvements
+
+### Version 4.0 - November 2026
+
+#### ✅ Kubernetes and Grafana
+- Added Terraform-managed Kind cluster `devops-grafana`.
+- Added Grafana deployment in the `monitoring` namespace.
+- Added Grafana access at `http://localhost:3000`.
+- Added Docker CLI and kubectl support to the agent container.
+- Grafana is deployed by applying its manifest inside the Kind control plane.
+
+#### ✅ Jenkins duplicate reconciliation
+- Canonical jobs are `API-Health-Check`, `Git-Repository-Clone`, and `Yahoo-Stock-Scraper`.
+- Legacy duplicate jobs are removed during initialization.
+- Canonical job scripts are updated from repository Groovy files.
+
+#### ✅ Jenkins trigger and status reliability
+- Build requests return `QUEUED` immediately.
+- Status requests support one job or all jobs.
+- Batch requests support `trigger_builds`.
+- UI no longer assumes `Build #None` is a real Jenkins build number.
+
+#### ✅ Faster Ollama model
+- Default model is now free local `qwen2.5:3b` instead of `llama3`.
+- Ollama keep-alive is 24 hours.
+- Agent startup waits for Qwen and performs a warmup request.
+- Deterministic output settings improve JSON tool routing.
+
+---
 
 ### Version 3.0 - September 2026 - Terraform Prometheus Deployment & Deployment Fixes
 
@@ -763,7 +779,7 @@ volumes:
 │ 3. AGENT QUERY ROUTING (agent.py:run_agent())                   │
 │    - Parse prompt_lower = "what is jenkins used for?"           │
 │    - Check keywords: list/show/jobs? No                         │
-│    - Check keywords: trigger/build/run? No                      │
+│    - Check keywords: trigger/build? No                          │
 │    - Check keywords: status/check? No                           │
 │    → DEFAULT: Natural language query                            │
 └────────────┬────────────────────────────────────────────────────┘
@@ -823,12 +839,12 @@ volumes:
 └────────────┬──────────────────────────────────────────────┘
              │
 ┌────────────▼──────────────────────────────────────────────┐
-│ 3. AGENT → FASTAPI BACKEND                               │
+│ 3. AGENT → FASTAPI                                     │
 │    GET http://fastapi:8000/jobs                          │
 └────────────┬──────────────────────────────────────────────┘
              │
 ┌────────────▼──────────────────────────────────────────────┐
-│ 4. FASTAPI → JENKINS                                     │
+│ 4. FASTAPI → JENKINS                                   │
 │    Calls jenkins_client.list_jobs()                      │
 │    Uses python-jenkins XML-RPC connection                │
 │    Jenkins Master (via port 8080)                        │

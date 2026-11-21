@@ -66,8 +66,9 @@ services:
     environment:
       - OLLAMA_HOST=0.0.0.0:11434
       - OLLAMA_DEBUG=0
+      - OLLAMA_KEEP_ALIVE=24h
     healthcheck:
-      test: ["CMD-SHELL", "curl -sS http://localhost:11434/ > /dev/null || exit 1"]
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
       interval: 10s
       timeout: 5s
       retries: 20
@@ -97,16 +98,16 @@ services:
         sleep 2
       done
 
-      echo '[ollama-puller] Checking for llama3 model...'
+      echo '[ollama-puller] Checking for qwen2.5:3b model...'
 
-      if ollama list | grep -q llama3; then
+      if ollama list | grep -q 'qwen2.5:3b'; then
         echo '[ollama-puller] ✓ Model already present'
         exit 0
       fi
 
-      echo '[ollama-puller] Pulling llama3 model (this may take several minutes)...'
+      echo '[ollama-puller] Pulling qwen2.5:3b model (this may take several minutes)...'
 
-      ollama pull llama3
+      ollama pull qwen2.5:3b
 
       echo '[ollama-puller] ✓ Model pull complete'
       "
@@ -130,10 +131,12 @@ services:
       - OLLAMA_URL=http://ollama:11434
       - DOCKER_HOST=unix:///var/run/docker.sock
       - TF_VAR_prometheus_config_path=/home/sumukha/Desktop/IITP-Project/Agentic-ai-devops-automation/terraform/local-docker-stack/prometheus/prometheus.yml
+      - OLLAMA_MODEL=qwen2.5:3b
     restart: unless-stopped
     volumes:
       - ./:/workspace
       - /var/run/docker.sock:/var/run/docker.sock
+      - /usr/bin/docker:/usr/local/bin/docker:ro
   streamlit:
     build:
       context: ./streamlit
@@ -148,7 +151,7 @@ services:
     environment:
       - FASTAPI_URL=http://fastapi:8000
       - OLLAMA_URL=http://ollama:11434
-      - OLLAMA_MODEL=llama3
+      - OLLAMA_MODEL=qwen2.5:3b
     restart: unless-stopped
 
 volumes:

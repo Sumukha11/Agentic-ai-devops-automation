@@ -30,6 +30,18 @@ CANONICAL_JOB_NAME_MAP = {
     "git_repo_clone.groovy": "Git-Repository-Clone",
 }
 
+LEGACY_JOB_ALIASES = {
+    "API-Health-Check": ["Api-Healcheck", "api_healcheck", "API-Healcheck", "API_Health_Check", "API Health Check"],
+    "Git-Repository-Clone": ["Git-Repo-Clone", "git_repo_clone", "Git_Repository_Clone", "Git Repository Clone"],
+    "Yahoo-Stock-Scraper": ["Yahoo-Scraper", "yahoo_scraper", "Yahoo_Scraper", "Yahoo Stock Scraper"],
+}
+
+JOB_DESCRIPTIONS = {
+    "API-Health-Check": "Checks critical API endpoints and reports service health.",
+    "Git-Repository-Clone": "Clones a Git repository using configurable URL, branch, and destination parameters.",
+    "Yahoo-Stock-Scraper": "Fetches the latest Apple stock price using the Yahoo Finance Python package.",
+}
+
 session = requests.Session()
 
 
@@ -135,11 +147,28 @@ def write_env_files(token_value=None):
 
 def normalize_job_name(name):
     base_name = os.path.basename(name)
+    stem = os.path.splitext(base_name)[0]
     if base_name in CANONICAL_JOB_NAME_MAP:
         return CANONICAL_JOB_NAME_MAP[base_name]
+    if stem in CANONICAL_JOB_NAME_MAP:
+        return CANONICAL_JOB_NAME_MAP[stem]
+    for filename, canonical_name in CANONICAL_JOB_NAME_MAP.items():
+        if stem == os.path.splitext(filename)[0]:
+            return canonical_name
 
-    segments = re.split(r"[_\-\s]+", name)
+    segments = re.split(r"[_\-\s]+", stem)
     return "-".join([segment.capitalize() for segment in segments if segment])
+
+
+def get_legacy_job_names(job_name, raw_basename=None):
+    aliases = set(LEGACY_JOB_ALIASES.get(job_name, []))
+    if raw_basename:
+        aliases.add(raw_basename)
+        aliases.add(raw_basename.replace("_", "-"))
+        aliases.add(raw_basename.replace("_", " "))
+        aliases.add(raw_basename.replace("_", ""))
+    aliases.discard(job_name)
+    return sorted(alias for alias in aliases if alias)
 
 
 def job_exists(name):
@@ -204,40 +233,104 @@ def load_groovy_jobs():
                 "script": script,
                 "path": script_path,
                 "legacy_names": legacy_names,
+                "raw_basename": raw_basename,
             })
 
     return jobs
 
-def create_pipeline_xml(script):
-    return f"""<?xml version='1.1' encoding='UTF-8'?>\n<flow-definition plugin='workflow-job'>\n  <definition class='org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition' plugin='workflow-cps'>\n    <script><![CDATA[{script}]]></script>\n    <sandbox>true</sandbox>\n  </definition>\n</flow-definition>"""
+def create_pipeline_xml(script, description=""):
+    escaped_description = (
+        description.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+    )
+    return f"""<?xml version='1.1' encoding='UTF-8'?>\n<flow-definition plugin='workflow-job'>
+  <actions/>
+  <description>{escaped_description}</description>
+  <keepDependencies>false</keepDependencies>
+  <definition class='org.jenkinsci.plugins.workflow.cps.CpsFlowDefinition' plugin='workflow-cps'>
+    <script><![CDATA[{script}]]></script>
+    <sandbox>true</sandbox>
+  </definition>
+  <disabled>false</disabled>
+</flow-definition>"""
 
 def create_job(name, xml):
-    try:
-        r = session.get(f"{JENKINS_URL}/job/{name}/api/json", timeout=5)
-        if r.status_code == 200:
-            print(f"✓ Job already exists: {name}")
-            return True
-    except Exception:
-        pass
     headers = get_crumb_headers()
     headers.update({"Content-Type": "application/xml"})
+
     try:
+        exists = job_exists(name)
+        if exists:
+            r = session.post(
+                f"{JENKINS_URL}/job/{name}/config.xml",
+                data=xml.encode("utf-8"),
+                headers=headers,
+                timeout=10,
+            )
+            if r.status_code in (200, 201):
+                print(f"✓ Updated canonical job: {name}")
+                return True
+            print(f"✗ Failed to update {name}: {r.status_code} - {r.text[:200]}")
+            return False
+
         r = session.post(
             f"{JENKINS_URL}/createItem",
             params={"name": name},
-            data=xml.encode('utf-8'),
+            data=xml.encode("utf-8"),
             headers=headers,
-            timeout=10
+            timeout=10,
         )
         if r.status_code in (200, 201):
-            print(f"✓ Created job: {name}")
+            print(f"✓ Created canonical job: {name}")
             return True
-        else:
-            print(f"✗ Failed to create {name}: {r.status_code} - {r.text[:200]}")
-            return False
-    except Exception as e:
-        print(f"✗ Error creating {name}: {e}")
+        print(f"✗ Failed to create {name}: {r.status_code} - {r.text[:200]}")
         return False
+    except Exception as e:
+        print(f"✗ Error creating/updating {name}: {e}")
+        return False
+
+
+def list_jobs():
+    try:
+        r = session.get(f"{JENKINS_URL}/api/json", timeout=10)
+        if r.status_code == 200:
+            return [job.get("name") for job in r.json().get("jobs", []) if job.get("name")]
+    except Exception:
+        pass
+    return []
+
+def reconcile_jobs():
+    print("\nReconciling Jenkins jobs...")
+    existing_jobs = list_jobs()
+    canonical_jobs = set(CANONICAL_JOB_NAME_MAP.values())
+
+    # Delete jobs that are not in the canonical list
+    for job in existing_jobs:
+        if job not in canonical_jobs:
+            print(f"Deleting obsolete job: {job}")
+            delete_job(job)
+
+    # Update or create canonical jobs
+    for canonical_name in canonical_jobs:
+        xml = create_pipeline_xml("echo 'This is a placeholder for the canonical job script.'")
+        if not job_exists(canonical_name):
+            print(f"Creating canonical job: {canonical_name}")
+            create_job(canonical_name, xml)
+        else:
+            print(f"Updating existing job: {canonical_name}")
+            # Here you would typically update the job configuration if needed
+            # For now, we just ensure the job exists
+
+    print("✓ Reconciliation complete")
+
+def reconcile_legacy_jobs(canonical_names):
+    legacy_names = set()
+    for canonical_name in canonical_names:
+        legacy_names.update(get_legacy_job_names(canonical_name))
+
+    for job_name in list_jobs():
+        if job_name not in canonical_names and job_name in legacy_names:
+            print(f"Removing legacy duplicate job: {job_name}")
+            delete_job(job_name)
 
 def main():
     global JENKINS_TOKEN
@@ -268,16 +361,23 @@ def main():
     jobs = load_groovy_jobs()
     if not jobs:
         print(f"⚠️ No groovy job scripts found in {PIPELINE_DIR}")
-    for job in jobs:
-        xml = create_pipeline_xml(job["script"])
-        print(f"Creating job from script: {job['name']} ({job['path']})")
-        created = create_job(job["name"], xml)
-        if created and job.get("legacy_names"):
-            for legacy_name in job["legacy_names"]:
-                if legacy_name != job["name"] and job_exists(legacy_name):
-                    delete_job(legacy_name)
 
-    print("\n✓ Jenkins job initialization complete")
+    canonical_names = {job["name"] for job in jobs}
+    reconcile_legacy_jobs(canonical_names)
+
+    for job in jobs:
+        xml = create_pipeline_xml(job["script"], JOB_DESCRIPTIONS.get(job["name"], ""))
+        canonical_name = job["name"]
+        legacy_names = get_legacy_job_names(canonical_name, job.get("raw_basename"))
+        for legacy_name in legacy_names:
+            if legacy_name and legacy_name != canonical_name and job_exists(legacy_name):
+                print(f"Removing legacy duplicate job: {legacy_name}")
+                delete_job(legacy_name)
+
+        print(f"Creating job from script: {canonical_name} ({job['path']})")
+        create_job(canonical_name, xml)
+
+    print("\n✓ Jenkins job initialization and legacy duplicate cleanup complete")
     sys.exit(0)
 
 if __name__ == "__main__":
