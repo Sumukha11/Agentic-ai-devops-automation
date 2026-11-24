@@ -1,0 +1,1768 @@
+
+===== PAGE 1 =====
+1 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+THESIS MANUAL FOR THE M.TECH. PROGRAM 
+ 
+ 
+ 
+Indian Institute of Technology Patna 
+ 
+ 
+ 
+ 
+ 
+ 
+
+===== PAGE 2 =====
+ 
+1 
+ 
+CONTENTS 
+ 
+1. GUIDELINES FOR PREPARING AND SUBMITTING M. TECH. 
+THESIS 
+3 
+1.1. 
+GENERAL INSTRUCTIONS 
+3 
+1.2. 
+TITLE OF THE THESIS AND TITLE PAGE FORMAT 
+3 
+1.3. 
+STATEMENT OF THESIS APPROVAL PAGE 
+4 
+1.4. 
+BODY OF THE THESIS 
+6 
+1.4.1. References 
+6 
+1.5. 
+TABLES AND FIGURES 
+6 
+1.5.1. Order of Tables and Figures 
+6 
+1.5.2. Table and Figure Placement 
+7 
+1.6. 
+PAGE NUMBERING 
+7 
+1.7. 
+TIPS FOR GOOD WRITING 
+7 
+1.7.1. Continuity of Ideas 
+7 
+1.7.2. Proper Usage of Verbs and Tenses 
+7 
+1.7.3. Mathematical Symbols 
+8 
+1.7.4. Units of Measurement 
+8 
+1.7.5. A Sample of Common Mistakes 
+10 
+1.7.6. Common Errors in Writing 
+10 
+1.8. 
+THE OVERRIDING RULE 
+12 
+2. GENERAL INFORMATION AND INSTITUTE REGULATIONS 
+13 
+2.1. 
+OBJECTIVES 
+13 
+2.2. 
+FEATURES 
+13 
+2.3. 
+INSTITUTE REGULATIONS 
+14 
+2.4. 
+TOPIC APPROVAL 
+14 
+2.5. 
+PUBLICATION OF THESIS INVOLVING PUBLICATION, PATENTS AND 
+RESTRICTED DATA 
+14 
+2.6. 
+APPROVAL REQUIREMENT 
+14 
+2.7. 
+COPYRIGHT 
+14 
+2.8. 
+AVOIDING INFRINGEMENT 
+15 
+2.9. 
+CITATION OF WEB-ACCESSED INFORMATION 
+15 
+3. CONTENT AND ORGANIZATION OF THESIS TEXT 
+16 
+3.1. 
+THESIS SIZE 
+16 
+3.2. 
+PAPER QUALITY 
+16 
+3.3. 
+PAPER SIZE 
+16 
+3.4. 
+DOUBLE-SIDED PRINTING 
+17 
+3.5. 
+NON PAPER MATERIAL 
+17 
+3.6. 
+PAGE NUMBERING 
+17 
+3.7. 
+BINDING 
+18 
+3.8. 
+FONT 
+18 
+3.9. 
+MARGINS 
+18 
+3.10. LINE SPACING 
+18 
+
+===== PAGE 3 =====
+ 
+2 
+ 
+3.11. EQUATIONS 
+18 
+3.12. HEADERS AND FOOTERS 
+19 
+3.13. THE APPENDIX OR APPENDICES 
+19 
+4. THESIS TEMPLATE: DOCUMENTATION AND WRITING STYLE
+ 
+20 
+4.1. 
+ABOUT THE DOCUMENT THAT FOLLOWS 
+20 
+ 
+ 
+Template for Thesis Title 
+ 
+ 
+ 
+ 
+ 
+  21  
+ 
+ 
+Template for Dedication page 
+ 
+ 
+ 
+ 
+  22 
+ 
+ 
+Template for Acknowledgements 
+ 
+ 
+ 
+ 
+  23 
+ 
+ 
+Template for Certificate 
+ 
+ 
+ 
+ 
+ 
+  24 
+ 
+ 
+Template for Declaration 
+ 
+ 
+ 
+ 
+ 
+  25 
+ 
+ 
+Template for Table of Contents 
+ 
+ 
+ 
+ 
+  26 
+ 
+ 
+Template for List of Tables  
+ 
+ 
+ 
+  
+  28 
+ 
+ 
+Template for List of Figures  
+ 
+ 
+ 
+   
+  29 
+ 
+ 
+Template for List of Symbols and Abbreviations 
+ 
+ 
+  30 
+ 
+ 
+Template for Abstract  
+ 
+ 
+ 
+ 
+  31 
+ 
+ 
+Template for first page of Chapter 1  
+ 
+ 
+ 
+  32 
+ 
+ 
+Template for first page of Chapter 2  
+ 
+ 
+ 
+  33 
+ 
+ 
+Style for References  
+ 
+ 
+ 
+ 
+  35 
+ 
+ 
+List of Publication(s) of M. Tech. student 
+ 
+ 
+   
+  36 
+5. PREPARATION AND SUBMISSION OF THESIS 
+37 
+5.1. 
+SUPERVISORY COMMITTEE AND FINAL READING APPROVAL FORMS 37 
+5.2. 
+CURRICULUM VITAE 
+37 
+5.3. 
+CHECKLIST BEFORE SUBMITTING THE FINAL COPIES OF YOUR THESIS 37 
+6. INDEX 
+39 
+7. SUGGESTIVE GUIDELINES  
+ 
+ 
+ 
+ 
+ 
+  41 
+
+===== PAGE 4 =====
+ 
+3 
+ 
+Chapter 1 
+ 
+Guidelines for Preparing and Submitting M. Tech. Thesis 
+ 
+1.1. General Instructions 
+1. The thesis must be printed on A4-size paper for distribution. The total number of 
+pages of the thesis should not exceed 60-70 pages. This excludes the title page.   
+2. Hardcopy of the thesis must be submitted to the department at least a week prior to 
+the probable date of examination. Softcopy and Hardcopy both are to be sent to the 
+external examiner as well as the examiner internals within the same time frame. 
+3. After incorporating the suggestions made by the examiners on the day of 
+examination, a copy of the modified thesis must be submitted with a certification 
+from the advisor. This final copy of the thesis must be submitted to CET OFFICE  
+through the M. Tech. program Coordinator/Advisor. A soft copy of the thesis must 
+also be submitted on moodle portal along with the hard copy of the thesis. 
+1.2. Title of the Thesis and Title page format 
+1. The title of a thesis should be a meaningful and a concise description of the 
+research done by the student. 
+2. The title should be short (word limit - 10-15 words, in no case exceeding 20 words) 
+and typed in block letters (All Caps). If title is longer than four inches, then title 
+should be arranged in an inverted pyramid with double line spacing. 
+3. Formatting:  
+ 
+ 
+ 
+Font style  
+: Times New Roman/Arial 
+ 
+ 
+Font size 
+: As indicated in sample page 
+ 
+ 
+Margin 
+: 1.5 inches (from top, bottom, left and right) 
+ 
+ 
+Justification 
+: Centre  
+4. Thesis title should not contain symbols (including Greek symbols such as π, α, 
+etc.), initials, formulas (including chemical formulas), subscripts, superscripts, 
+numerical characters, acronyms or even abbreviations in brackets.  Redundant words, 
+such as "An investigation of .....", "A Study of .....", "Theory of ....", "Some ....", "An 
+Experimental Investigation of ...", and "Toward a ....”, should be avoided.  
+Examples 
+
+===== PAGE 5 =====
+ 
+4 
+ 
+"The Effects of Ion Implantation and Annealing on the Properties of GeSi2 Films on 
+Silicon Wafer Substrates" should be written as "The Effects of Ion Implantation and 
+Annealing on the Properties of Germanium Silicide Films on Silicon Wafer 
+Substrates." 
+"TEM" should be written as "Transmission Electron Microscopy" and should not be 
+written as "Transmission Electron Microscopy (TEM)."  
+ 
+1.3. Statement of Thesis Approval Page: 
+This page indicates that thesis has been approved by all DPPC members, who sign 
+above their full legal name.  The template for this is available in subsequent pages (pg 
+– 5). 
+ 
+ 
+
+===== PAGE 6 =====
+ 
+5 
+ 
+ 
+INDIAN INSTITUTE OF TECHNOLOGY PATNA 
+Evaluation Committee Approval 
+ 
+of a Thesis submitted by  
+ 
+Name of the student (in All CAPS) 
+ 
+ 
+The thesis of ______________________ has been read, found satisfactory and 
+approved by the following DPPC committee members. 
+ 
+Name : 1___________________,  Supervisor 
+Date :_________________ 
+ 
+Name : 2 ___________________, Co-Supervisor 
+Date : _________________ 
+ 
+Name : 3 ___________________, Member  
+Date : _________________ 
+ 
+Name : 4 ___________________, Member  
+Date : _________________ 
+ 
+Name : 5 ___________________, Member  
+Date : _________________ 
+ 
+Name : 6 ___________________, Member  
+Date : _________________ 
+ 
+Name : 7 ___________________, Member  
+Date : _________________ 
+ 
+ 
+ 
+
+===== PAGE 7 =====
+ 
+6 
+ 
+1.4. Body of the Thesis  
+The student is responsible for the way the text is organized.  However, it should have 
+title of all sections (e.g. Introduction, Review of Literature, Objectives and Scope, 
+Results, Discussion of result, Conclusion, Contributions made by the scholar, and 
+References) in capital letters and center justified.  The text (in each section) begins 
+after a triple space. 
+If the thesis contains text that is a reprint of a previously published report, a credit line 
+“Reprinted with permission from” followed by source must be placed on the page.  
+Use MS Word Times New Roman/Arial (or LaTeX) with font size 12 and 1.5 line 
+spacing for the text. 
+ 
+1.4.1. References 
+Use number reference citation system where numbers in the text are in superscript 
+only.  If several references are cited at once, then numbers are separated by comma.  
+If reference number is to be mentioned at the end of a sentence, then the superscript 
+number is placed outside the punctuation marks. 
+e.g. Many researchers6, 7, 11-19 disagree with the conclusions drawn by Feynman.20 
+The reference list is compiled (under reference section) in numerical order.  No 
+spacing between lines within a particular entry is present.  However, a double space 
+separates two references. 
+1.5. Tables and Figures 
+When data are compiled in rows and columns, these are referred to as a “Table”.  
+Tables should be used only when absolutely necessary. Figures include the diagrams, 
+schemes 
+(including 
+chemical 
+reactions), 
+photos, 
+maps, 
+plots 
+or 
+other 
+schematic/graphical representation. 
+The guideline for ordering, placement, numbering and assigning title (for tables) or 
+caption (for figures) is same as that mentioned in the same as that for thesis. For 
+reference, please consult the “Guidelines on the Preparation of a Thesis”. 
+1.5.1. Order of Tables and Figures 
+Tables and figures also must be referenced in order (i.e., Table 1, Table 2, Table 3, 
+not Table 1, Table 3, Table 2). It is not acceptable to refer to Table 3 in the text before 
+referring to Table 2. However, once a table has been referred to in the main text, it can 
+
+===== PAGE 8 =====
+ 
+7 
+ 
+be mentioned again out of its sequential order. Each figure or table appears only once 
+and cannot be repeated. 
+ 
+1.5.2. Table and Figure Placement 
+A large table or figure is placed by itself on the page, centered within the 
+thesis margins. Although it is not necessary for large tables or figures to be centered 
+precisely between the top and bottom margins of the page, tables and figures should 
+be placed so that they look balanced on the page. Full-page tables or figures must be 
+placed on the page immediately following the textual reference. Other guidelines 
+pertaining to placement of tables and figures are same as that mentioned for writing 
+the thesis manuscript (refer to pg 34 of this document). 
+ 
+1.6. Page Numbering 
+The title page should not have a number printed on it. The page next to the title page 
+should bear the page number 1. Page numbers should be printed centered at the 
+bottom of each page. 
+ 
+1.7. Tips for Good Writing 
+1.7.1. Continuity of Ideas 
+It is very important that there is a continuity of idea in your thesis. Few suggestions in 
+this regard are mentioned below: 
+A particular paragraph should elaborate only one theme/idea. If there is a need to 
+emphasize multiple themes, then it is suggested to name them in a single paragraph 
+and subsequently discuss them in separate paragraphs. 
+There should be a smooth transition from one paragraph to the next paragraph. In 
+order to do so, the first paragraph mentions the theme of the next paragraph.  
+ 
+1.7.2. Proper Usage of Verbs and Tenses 
+In order to have continuity, it is essential to use verb tenses judiciously and properly. 
+Following suggestions may be useful in this context: 
+
+===== PAGE 9 =====
+ 
+8 
+ 
+a. Past tense (e.g., "Bergman showed ... ") or present tense (e.g., "Newton has 
+shown . . .") is appropriate for the literature review. This usage of verb tense 
+may be applied for discussion on the past events. 
+b. Results are best described by using past tense. e.g., "Expenditure increased at 
+the rate of 10% per year.").  
+c. Inorder to discuss results and draw conclusions, it is apt to use present tense. 
+e.g., “The results of the experiment indicate ...”  
+ 
+1.7.3. Mathematical Symbols 
+Mathematical expressions must italicize all symbols used in them. A distinct look (to 
+the mathematical expression) may be imparted by separating them from the text (both 
+preceding and following it) by larger line spacing and an indentation should be given. 
+Each equation must appear only after it has been referenced in the text. 
+ 
+1.7.4. Units of Measurement 
+Always use International System of Units (SI) units. Follow the guidelines given 
+below while using the SI units 
+ 
+• Symbols for units do not have an appended period/full stop (.) unless they 
+appear at the end of a sentence. e.g., The length of the cube is 500 m and the 
+breadth is only 0.01 m. 
+• Symbols for units are written in upright Roman type (m for meter, g for gram), 
+so as to differentiate them from the italic type used for mathematical variables 
+(m for mass, g for acceleration due to gravity). 
+• Symbols for units are generally written in lower case, except for symbols 
+derived from the name of a person. e.g., the SI unit of frequency is named 
+after Heinrich Hertz, so its symbol is "Hz" whereas its unit is "Hertz". Another 
+common example is SI unit of measurement for temperature - Kelvin named 
+after Lord Kelvin. It is denoted by unit symbol K. Other exceptions include 
+petametre (1015 m; symbol = Pm) where the symbol has the first alphabet in 
+upper case to differentiate it from picometre (10−12 m; symbol = pm).   
+• The SI rule for pluralizing units is that symbols of units are not pluralized, for 
+example "600 kg" (not "600 kgs"). 
+
+===== PAGE 10 =====
+ 
+9 
+ 
+• The number and the symbol of the SI unit are separated by a space (e.g., 
+"32.451 kg", "9.3x104 m3”, "22 K"). Some notable exceptions are the symbols 
+for plane angular degrees, minutes and seconds (o, ‘, and "), which are placed 
+immediately after the number with no intervening space. 
+• Spaces (or commas) may be used as a thousands separator (1 000 000 or 
+1,000,000). Spaces are preferred to avoid confusion resulting from the 
+different convention used in different countries. 
+• Symbols for derived units that are obtained from multiple units by 
+multiplication are joined with a space or center dot (·) (e.g. "N m" or "N·m "). 
+• Symbols for derived units obtained by division of two units are joined with a 
+solidus (/), or given as a negative exponent. For example, the "meter per 
+second" can be written "m/s", "m s-1", or "m·s-1". A solidus should not be used 
+if the result is ambiguous, i.e. "kg·m-1·s-2" is preferred to "kg/m·s2" to avoid 
+misinterpretation. 
+ 
+Many units in everyday and scientific use are not derived from the seven SI base units 
+(meter, kilogram, second, ampere, Kelvin, mole, and candela). Some examples which 
+can be used are as follows: 
+ 
+• Many units of time ― minute (min), hour (h), day (d) ― in use, besides the SI 
+unit “second” are specifically accepted for usage. 
+• The "year" is specifically not included in SI units, but its use is accepted. 
+• Electrical energy is often billed in kilowatt-hours instead of megajoules. 
+• The nautical mile and knot (nautical mile per hour) are used to measure travel 
+distance and speed of ships and aircraft. In addition to these, convention on 
+International Civil Aviation permits the "temporary use" of foot for altitude. 
+• Astronomical distances are measured in astronomical units, parsecs (an 
+abbreviated form of a parallax of one second; symbol: pc), and light-years 
+(symbol: ly) instead of, say, petametres (1 petametre = 1015 m; symbol = Pm). 
+• Atomic scale units used in Science and Engineering are: ångström, 
+electronvolt, atomic mass unit, and barn. 
+• A sphygmomanometer measures and reports blood pressure in in mmHg 
+instead of Pa. 
+
+===== PAGE 11 =====
+ 
+10 
+ 
+ 
+See the following website for details of Rules and style conventions, as far as SI 
+Units are concerned. 
+http://physics.nist.gov/cuu/Units/rules.html 
+ 
+Indian Units of Measurement 
+ 
+"Lakh or Lac" is not understood by many non-Indian examiners. There are two ways 
+to deal with this problem. Avoid using it; instead express it as 1 00 000. 
+ 
+Example: The sentence "The car was sold to 5 lakh persons last year" could be written 
+instead as "The car was sold to 5 00 000 persons last year". 
+Alternatively, when "Lakh/Lac" is used for the first time, explain its equivalence to "1 
+00 000" in a footnote. 
+ 
+1.7.5. A Sample of Common Mistakes 
+Some words and expressions, commonly misspelled by the scholars, are the 
+following: 
+Correct  
+Incorrect  
+ 
+et al. 
+etal, et. al, et al 
+(The word is "et alia") 
+whereas 
+where as 
+ 
+Literature 
+Literatures 
+ 
+Equipment 
+Equipments 
+ 
+kWh 
+KWH, KWh 
+(K stands for Kelvin.) 
+million tons (106) 
+MT 
+(M stands for Mega.) 
+10 kg 
+10kg 
+(A space separates the value from the 
+unit of measurement.) 
+ 
+1.7.6. Common Errors in Writing 
+Writing a dissertation could be tiring process. This may lead to loss of attention that 
+may lead you to common errors in writing. The following write up gives you an idea 
+about some of these common errors. Keeping them in mind will make your work 
+impressive.  
+In most writing, common mistakes include: 
+(1) Incorrect use of punctuation, including commas, semicolons, colons, and 
+dashes, etc. 
+
+===== PAGE 12 =====
+ 
+11 
+ 
+(2) Misusing articles and prepositions 
+(3) Mistaking one word for another (envelope and envelop, stationary and 
+stationery, affect and effect, complement and compliment). The spell-checker 
+won't detect these errors. 
+(4) You may want to keep your sentences small. 
+(5) Confusing "then" and "than," "its" and "it's," "affect" and "effect," and "lay" 
+and "lie" 
+(6) Advice versus Advise: 
+Advice is a noun, something that you give. It is a thing. Say, "Please give me 
+some advice." 
+Advise is a verb, something that you do. It is some action. Say, "Please advise 
+me." 
+(7) Affect and Effect:  
+(8) As verbs, they differ. To affect some thing is to have some influence upon it. 
+To effect some action is to cause it to happen. As nouns, they also differ. 
+Affect is like affection, related to emotion. Effect is a result. 
+(9) Apart and a Part: 
+One is a single word; the other includes two words. "Apart" means two things 
+are separate or away from each other. A "part" means one thing is a portion or 
+an element of another. 
+A wall is usually seen as a "part" of a house, for example, while a fence is seen 
+as "apart" from the house. 
+(10) 
+Complement and Compliment: 
+The change from an "e" to an "i" makes a big difference in these two words. 
+The word "complement" is related to the word "complete." If one thing 
+complements another, then the two together make a whole. 
+In contrast, the word "compliment" is an observation of some good quality in a 
+person. It is considered more sincere than flattery. 
+(11) In Spite: There is no such word as "inspite." Make sure you use the two words 
+separately, "in" and "spite." 
+(12) Isn't it? 
+When you make a statement, then immediately ask if it is not true, you can use 
+"isn't it" only if the question used the verb "to be" (ie "is" or one of its forms), 
+
+===== PAGE 13 =====
+ 
+12 
+ 
+the original question was positive, and if the subject of the sentence is third 
+person singular (it). It is correct to say, for example, "It is coming, isn't it?" 
+(13) Loose and Lose: The two words, "loose" and "lose," look similar, especially to 
+those who speak English as a second language. It is easy to mix them up. The 
+word, "loose," means something is not tight or securely fastened down. It might 
+easily fall apart or fall off. The word "lose," in contrast, means to have 
+something go away and become lost. 
+(14) Passive Voice: Using the passive voice is a common way to say less than 
+people want to read or hear. In the passive voice you say, "The orange was 
+eaten." That way you hide the subject and so do not reveal who ate the orange. 
+If you use the active voice, you must reveal the subject. "Aziz ate the orange." 
+The active voice is simpler, and it always identifies the subject, i.e. who did the 
+action. Nothing is hidden. 
+Always use the active voice in writing an academic paper or dissertation.  
+(This is compiled from various sources). 
+ 
+1.8. The Overriding Rule 
+The text in the thesis should be clear in its meaning. To ensure the clarity of 
+presentation, the best method is to ask your friend, who is not in your area of work, to 
+read through your thesis. If he ( or she) is confused with your writing, it means that 
+the sentence/paragraph/ should be rewritten for clarity. 
+
+===== PAGE 14 =====
+ 
+13 
+ 
+CHAPTER 2 
+ 
+General Information and Institute Regulations 
+ 
+This handbook is prepared by Indian Institute of Technology Patna to aid the students 
+in writing M. Tech. thesis. This handbook must be used in conjunction with the 
+student’s department for references, figure and table format and other stylistic 
+considerations. It is the student’s responsibility to be familiar with the rules and 
+regulations governing thesis submission and subsequent requirements for graduation. 
+The following is a general outline for preparing a thesis for approval by the student’s 
+department and the Institute. 
+ 
+2.1. Objectives 
+For all M. Tech. students, completing a research thesis is a mandatory requirement.  
+A thesis is documentation of a research of a student- a record of the original research 
+done by the student during his M. Tech. program. It provides information on the 
+student’s research work to future researchers. The Institute is committed to preserve a 
+paper copy of the student’s thesis for archiving and cataloging it in the central library, 
+making it available to others for academic purposes. 
+The objective of this document is to provide a set of guidelines for research students 
+to prepare a thesis to satisfy the above mentioned criteria for M. Tech. research. 
+ 
+2.2. Features 
+The main criteria for M. Tech. research is that it should provide a useful educational 
+experience for the student emphasizing creativity, independent action and learning, 
+research methodology, and scholarly approach. The research should possess the major 
+characteristics of the scientific method, namely objectivity and reproducibility. 
+Assumptions should be clearly stated in both experimental and theoretical research. 
+The thesis should reflect a level of competence indicative of significant achievement 
+beyond the master's level. Thus, the research is expected to draw directly upon 
+
+===== PAGE 15 =====
+ 
+14 
+ 
+advanced learning in the student's major field and demonstrate mastery of that 
+knowledge.  
+2.3. Institute Regulations 
+Guidelines for “Evaluation of M. Tech. Project/Thesis” is mentioned in M. Tech. 
+ordinance of IIT Patna. 
+ 
+2.4. Topic approval 
+The advisor approves the topic/title of the thesis. 
+ 
+2.5. Publication of thesis involving Publication, Patents and 
+restricted data 
+ 
+Written permission (hardcopy, facsimile or electronically signatured) has to be 
+obtained from Journal for reproducing data published in the journal. An article or 
+articles that are accepted by journals but have not yet been published may be used as 
+part of a thesis or dissertation. The student should check with the specific journals if 
+there is any requirement regarding obtaining permission for such unpublished yet 
+accepted manuscripts. In case of sponsored projects, funding agency has to be 
+mentioned and the data usage should be in accordance with the guidelines of the 
+funding agency. Data from patents can be incorporated in thesis only after relevant 
+permission and adherence to the patent guidelines. 
+ 
+2.6. Approval requirement 
+The student has to make sure whether all requirements have been fulfilled as 
+mentioned in the Ordinance.  
+ 
+2.7. Copyright 
+Copyright protection is obtained by placing notice of copyright on the thesis . The 
+copyright notice should be placed in the Thesis Title page and no separate page is 
+required. The copyright notice shall consist of the following: 
+ 
+
+===== PAGE 16 =====
+ 
+15 
+ 
+a. The encircled symbol “C” © 
+b. The year of the award of the degree 
+c. The name of the owner of the copyright 
+d. The words “ All rights reserved” 
+  
+Example 
+Copyright © Your Name 2011 
+     All Rights Reserved 
+ 
+2.8. Avoiding infringement 
+Obtaining permission to quote copyrighted material is Government law. Students 
+should obtain written permission (hard copy, facsimile, or electronic signature) for 
+any figure or table in its entirety. Students should also use the credit line specified by 
+the copyright owner and place it where required by the owner. 
+All sources must be cited whenever use is made of the material of others, even if the 
+use is limited and no copyright permission is necessary. Direct use of the work of 
+others without citing the source is plagiarism considered as a severe academic 
+offence. 
+ 
+2.9. Citation of Web-accessed Information 
+Web citations must include name of author, title of publication, and date of 
+publication. These items are formatted according to the style guide selected. In 
+addition, the Uniform Resource Locator (URL) must be provided in the following 
+form: 
+• protocol or access-mode identifier (i.e., http, https), followed by a colon and two 
+forward slashes (e.g., http://) 
+• host name, always typed in lower case (e.g., http://www.ieee.org/) 
+• pathway to the document, including file name, typed exactly as it appears, including 
+upper and lower case and punctuation 
+• A sample URL is: http://www.ieee.org/Policy/Submis/Abstract/pabs587.cfm 
+URLs may be broken only after a slash or double slash or after a period. Never insert 
+a hyphen, and never break a URL at a hyphen. 
+
+===== PAGE 17 =====
+ 
+16 
+ 
+Chapter 3 
+Content and Organization of Thesis Text 
+ 
+Proper organization of the thesis is extremely important that enable the readers to 
+view and understand the contents of the thesis. In this chapter, each component of the 
+thesis is listed to help the students in organizing their thesis properly. 
+ 
+3.1. Thesis size 
+A thesis should not exceed 60-70 pages (excluding prefacing material of the thesis). 
+Some tips to reduce the size of a thesis are given below. 
+a. Do not unnecessarily repeat definitions and texts. 
+b. Proper referencing may save writing details of literature surveyed. 
+c. Be precise in your description, conclusions and interpretations. 
+d. Do not leave blank space on a page after a table or a figure. 
+e. Students might consider including a CD for details computer program listing and 
+just include the flow of the logic and its other distinguishing features in the text of the 
+thesis.  
+ 
+3.2. Paper Quality 
+The copy of the thesis to be submitted to the central library should be durable. To 
+ensure durability, paper should be acid neutral or acid-free as mentioned in the packet. 
+Thesis-quality paper (Acid free Bond Paper) is available in the market and typically 
+weighs  greater than 85 GSM (gram per square meter).  
+ 
+3.3. Paper size 
+The standard size of paper of a thesis is 21.5 cm (8.5 inches) wide and 28 (11 inches) 
+long, commonly known as A4 sized paper. 
+Oversized figures and tables if any should be reduced appropriately to fit with the size 
+of the paper. Care should be taken not to compromise the clarity of the contents while 
+reducing. If required, you may consider folding oversized papers to fit with the thesis 
+size. 
+
+===== PAGE 18 =====
+ 
+17 
+ 
+3.4. Double-sided printing 
+The copies of the thesis at the time of submission should be printed double sided. The 
+final copy of the thesis to be submitted to the central library only may be either single 
+sided or double sided. In case of double sided printing, care must be taken to choose 
+paper quality so as to ensure opaqueness of the paper and good readability under 
+normal lighting conditions. 
+In a double sided thesis, new chapters always starts on an odd numbered page. If a 
+chapter ends on an odd numbered page, the next even numbered page is to be kept 
+blank to ensure start of the next chapter on an odd numbered page. 
+ 
+3.5. Non paper material 
+Digital or magnetic materials, such as CDs and DVDs, may be included in the thesis 
+as a supporting material. They have to be given in closed packet in the back cover 
+page of the thesis. Proper label should be given to non paper material that should 
+include name of student, date of submission and copyright notice. However, 
+preservation and use of such material is not guaranteed from the central Library, since 
+rapid technology changes may render the format obsolete. 
+Students can also include important samples they have produced, e.g., Polymer films 
+and others provided they are non toxic and clearly labelled and packeted at the back 
+cover page. 
+ 
+3.6. Page numbering 
+Page numbers for the prefacing materials of the thesis should be in Roman numerals 
+and should be centered or right cornered at the bottom of the pages. 
+Page numbers of the body of the thesis should be in Arabic numerals and start with 
+the page of Chapter 1. It should continue throughout the thesis and same trend of 
+centering or right cornering the numbers as the Roman numerals be followed. 
+In double sided thesis, the odd numbered pages are always on the right and even 
+numbered pages are on the left. 
+ 
+ 
+
+===== PAGE 19 =====
+ 
+18 
+ 
+3.7. Binding 
+Initial copies of the thesis submitted for examination have to be softbound and printed 
+on both sides. Final copies of the thesis, after incorporating the changes, corrections 
+and modifications suggested by the doctoral committee members, have to be 
+hardbound and preferably printed on one side. 
+ 
+3.8. Font 
+Preferred font size of normal text in the thesis is 12 point. However, minimum 
+acceptable font size of material within a table/figure/pictorial representation is 8 point. 
+The font type should be Times New Roman or Arial.  
+ 
+3.9. Margins 
+A margin of 3.75 cm (1.5 inch) is to be given on the binding edge while on the other 
+side it is to be 2.5 cm (1inch). The text of the thesis, including headings, figures, 
+tables, and notes, but excluding page numbers, must be accommodated within the 
+page area. 
+ 
+3.10. Line Spacing 
+The line spacing in the main text should be one and a half (1.5). Single line spacing 
+should be given for abstract, declaration, thesis approval, figure captions, table titles, 
+figure legends, foot notes and references. 
+Two consecutive paragraphs should either be separated by spacing larger than 
+the line spacing adopted for the text or the paragraph is started with an initial tab 
+space. 
+ 
+3.11. Equations 
+Format of equations is dictated by the style guide the student is following. Short 
+equations are centered within the thesis margins. All equations are set off from 
+preceding and following text by a triple space. Spacing must be uniform and 
+consistent. In general, equations should be numbered at the right margin of the thesis 
+
+===== PAGE 20 =====
+ 
+19 
+ 
+manuscript with the number either in brackets or parentheses. Equations may be 
+numbered consecutively or locally. If figures and tables are numbered locally, 
+equations also must be numbered locally. If they are locally numbered, the main 
+divisions of the manuscript must be numbered with Arabic numerals. Local 
+numbering of equations never exceeds one decimal place (i.e., equations are never 
+numbered according to the number assigned to a subheading). Equation numbers must 
+be aligned with each other throughout the manuscript. 
+ 
+3.12. Headers and Footers 
+Headers and footers may be used to provide chapter name/number or any other 
+relevant information. However, author should be consistent in the use of 
+header/footers throughout the entire thesis. 
+ 
+3.13. The Appendix or Appendices 
+If used, an appendix follows the text but precedes the references or bibliography. The 
+pages of the appendix are numbered consecutively with the rest of the text. There is 
+considerable flexibility in the kind of material that may be placed in appendices: 
+computer programs, tables of raw data, questionnaires, letters, original historical 
+source material, etc. Each appendix should be sequenced with upper-case letters of the 
+alphabet (APPENDIX A, APPENDIX B). If there is only one appendix, no letter is 
+used; one appendix may or may not have an explanatory title. If there is more than 
+one appendix, each has an explanatory title. The appendix title(s) must be listed in the 
+table of contents in all upper-case letters. Subheadings in an appendix, however, are 
+not listed in the table of contents. Subheads in an appendix follow the same subhead 
+scheme selected for the text. 
+ 
+ 
+
+===== PAGE 21 =====
+ 
+20 
+ 
+Chapter 4 
+Thesis Template: Documentation and Writing Style 
+ 
+4.1. ABOUT THE DOCUMENT THAT FOLLOWS 
+This “template” is a very basic “starter kit” for formatting your thesis in Microsoft 
+WORD.  It does not incorporate WORD’s Autogenerate capability for the Table of 
+Contents, List of Tables, Figures etc. 
+ 
+It has the margins and page numbering set up, the formatting of the front pages (often 
+the area with the greatest number of formatting errors) correctly set up, chapter and 
+section headings in acceptable formats and heading and subheading styles set up 
+through subheading level 4. 
+ 
+ It also offers some tips, usually in blue text boxes that can be easily deleted before 
+you print.  IMPORTANT:   you must be in the Page Layout View (under the View 
+menu) to see or delete these blue text boxes (also called “help boxes” or “instructional 
+text boxes” herein). 
+ 
+It is our intention to develop a template that allows the user to take advantage of 
+WORD’s auto-generation of Table of Contents, Lists of Tables and Figures, etc.  
+
+===== PAGE 22 =====
+ 
+21 
+ 
+[THESIS TITLE GOES HERE] 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+A Thesis 
+Presented to 
+The Academic Faculty 
+ 
+ 
+ 
+by 
+ 
+ 
+[Student Name Goes Here] 
+ 
+ 
+ 
+In Partial Fulfillment 
+of the Requirements for the M. Tech. Degree 
+ 
+ 
+ 
+ 
+Indian Institute of Technology Patna 
+[MONTH YEAR of VIVA VOCE] 
+ 
+ 
+Copyright © Chandan Kumar 20xx
+This TEMPLATE is very basic.  On this page and the next few pages, where you see 
+greyed-in  text surrounded by brackets, selecting  the grey text will open a Text 
+Form Field dialogue box where you can  enter your text.  DELETE THIS HELP 
+TEXT BOX AND ALL OTHER INSTRUCTIONAL TEXT BOXES BEFORE 
+PRINTING.  The text will disappear along with the box.  
+
+===== PAGE 23 =====
+ 
+22 
+ 
+ [To my beloved parents] 
+  
+ 
+ 
+ 
+ 
+This is the [optional] Dedication page.  If your thesis contains a 
+Dedication, it would replace the text above.  The text should be 
+centered both vertically and horizontally on the page and should 
+be single-spaced.  The Dedication page does not have a heading 
+or a printed page number, but the page does count in the page 
+numbering.  Note that Dedication bears no heading or page 
+number and it should not be listed in the Table of Contents. 
+ 
+DELETE THIS INSTRUCTIONS TEXT BOX BEFORE 
+PRINTING. 
+ 
+DELETE THIS WHOLE PAGE IF YOUR ARE NOT 
+INCLUDING A DEDICATION IN YOUR THESIS. 
+
+===== PAGE 24 =====
+ 
+23 
+ 
+ 
+ACKNOWLEDGEMENTS 
+ 
+ 
+[Start typing here.]  I wish to thank Dr. Issac Newton, my supervisor, for his 
+invaluable guidance and support. I would also like to thank …….[Delete this 
+paragraph.] 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Acknowledgements must be written in complete sentences and in the 
+third person.  i.e. not “Thanks, Mom and Dad!” but “I would like to 
+especially thank my mother and father, without whose guidance and 
+support I would not be here.” 
+ 
+The Acknowledgements page is the first page to bear a printed page 
+number (in Roman) and be listed in the Table of Contents. 
+ 
+DELETE THIS INSTRUCTIONS TEXT BOX BEFORE PRINTING. 
+ 
+ 
+
+===== PAGE 25 =====
+ 
+24 
+ 
+Certificate 
+ 
+This is to certify that the thesis entitled “THE TITLE OF THE THESIS”, submitted 
+by NAME OF THE STUDENT to Indian Institute of Technology Patna, is a record of 
+bonafide research work under my (our) supervision and I (we) consider it worthy of 
+consideration for the degree of Master  of Technology of this Institute. This work or a 
+part has not been submitted to any university/institution for the award of 
+degree/diploma. The thesis is free from plagiarized material. 
+ 
+ 
+ 
+ 
+ 
+________________________________                
+________________________________ 
+                   Supervisor 
+ 
+ 
+ 
+ 
+Date: ______________ 
+ 
+
+===== PAGE 26 =====
+ 
+25 
+ 
+Declaration 
+I certify that  
+a. The work contained in this thesis is original and has been done by myself under the 
+general supervision of my supervisor/s. 
+b. The work has not been submitted to any other Institute for degree or diploma. 
+c. I have followed the Institute norms and guidelines and abide by the regulation as 
+given in the Ethical Code of Conduct of the Institute. 
+d. Whenever I have used materials (data, theory and text) from other sources, I have 
+given due credit to them by citing them in the text of the thesis and giving their details 
+in the reference section. 
+e. The thesis document has been thoroughly checked to exclude plagiarism. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Signature of the Student 
+Roll No: 
+ 
+ 
+
+===== PAGE 27 =====
+ 
+26 
+ 
+TABLE OF CONTENTS 
+Page 
+ACKNOWLEDGEMENTS 
+iv 
+LIST OF TABLES 
+# 
+LIST OF FIGURES 
+# 
+LIST OF SYMBOLS AND ABBREVIATIONS 
+# 
+SUMMARY/ABSTRACT 
+# 
+CHAPTERS 
+1 [Click here and type CHAPTER 1 TITLE] 
+1 
+[Click here and type Subheading] 
+# 
+[Click here and type Subheading] 
+# 
+2 [Click here and type CHAPTER 2 TITLE] 
+# 
+[Click here and type Subheading] 
+# 
+[Click here and type Subheading] 
+# 
+3 [Click here and type CHAPTER 3 TITLE] 
+# 
+[Click here and type Subheading] 
+# 
+This TABLE OF CONTENTS IS SET FOR YOU TO MANUALLY INPUT 
+YOUR INFORMATION.  If you need more chapters or subheadings in any 
+chapter, simply go on adding keeping the source formatting same. 
+This also applies if you need more tables or figures in the respective lists.   Note 
+that all subheadings in the Table of Contents should be in the same font size and 
+plain style as the body of the thesis.   
+DELETE THIS BOX after reading. 
+
+===== PAGE 28 =====
+ 
+27 
+ 
+[Click here and type Subheading] 
+# 
+[Click here and type Subheading] 
+# 
+4 [Click here and type CHAPTER 4 TITLE] 
+# 
+[Click here and type Subheading] 
+# 
+[Click here and type Subheading] 
+# 
+5 [Click here and type CHAPTER 5 TITLE] 
+# 
+[Click here and type Subheading] 
+# 
+[Click here and type Subheading] 
+# 
+[Click here and type Subheading] 
+# 
+[Click here and type Subheading] 
+# 
+[Click here and type Subheading] 
+# 
+[Click here and type Subheading] 
+# 
+6 [Click here and type CHAPTER 6 TITLE] 
+# 
+[Click here and type Subheading] 
+# 
+[Click here and type Subheading] 
+# 
+7 [Click here and type CHAPTER 7 TITLE] 
+# 
+APPENDIX A: [Click here and type APPENDIX A TITLE] 
+# 
+APPENDIX B: [Click here and type APPENDIX B TITLE] 
+# 
+REFERENCES 
+# 
+ 
+
+===== PAGE 29 =====
+ 
+28 
+ 
+LIST OF TABLES 
+Page 
+Table 1.1: [Click here and type table title.] 
+# 
+Table 2.1: [Click here and type table title.] 
+# 
+Table 2.2: [Click here and type table title.] 
+# 
+Table A.1: [Click here and type table title.] 
+# 
+Table A.2: [Click here and type table title.] 
+# 
+Table B.1: [Click here and type table title.] 
+# 
+ 
+A Note on Table and Figure Numbering 
+ 
+Tables and figures numbers should restart every chapter, in which the numbering 
+takes the form “chapter number.table number”, e.g. Table 2.1, 2.2, 3.1, 4.1…4.16.  
+In the latter case, table in appendices will be numbered  “appendix 
+letter.tablenumber”, e.g. Table A.1, A.2, B1, C.1…C.16. 
+ 
+DELETE THIS HELP TEXT BOX WHEN FINISHED. 
+
+===== PAGE 30 =====
+ 
+29 
+ 
+LIST OF FIGURES 
+Page 
+Figure 1.1: [Click here and type figure title.] 
+# 
+Figure 2.1: [Click here and type figure title.] 
+# 
+Figure 2.2: [Click here and type figure title.] 
+# 
+Figure A.1: [Click here and type figure title.] 
+# 
+ 
+ 
+ 
+A Note on Table and Figure Numbering 
+ 
+Tables and figures numbers should restart every chapter, in which the numbering 
+takes the form “chapter number.table number”, e.g. Table 2.1, 2.2, 3.1, 4.1…4.16.  
+In the latter case, table in appendices will be numbered  “appendix 
+letter.tablenumber”, e.g. Table A.1, A.2, B1, C.1…C.16. 
+ 
+DELETE THIS HELP TEXT BOX WHEN FINISHED. 
+
+===== PAGE 31 =====
+ 
+30 
+ 
+LIST OF SYMBOLS AND ABBREVIATIONS 
+ 
+Symbol-1  
+What it means 
+Symbol-2  
+What it means 
+Abbrev1  
+What it means 
+Abbrev2  
+What it means 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+[OPTIONAL] 
+ 
+If you have a full page or more of either Symbols or Abbreviations, they should 
+be broken into separate lists, i.e. a LIST OF SYMBOLS and a LIST OF 
+ABBREVIATIONS.  
+ 
+When typing the NOMENCLATURE, or THE LIST OF SYMBOLS AND 
+ABBREVIATIONS, definitions that continue on two or more lines should be 
+single spaced.  1.5 space between definitions.  
+ 
+DELETE THIS BOX AFTER READING. 
+
+===== PAGE 32 =====
+ 
+31 
+ 
+ABSTRACT 
+ 
+Start typing the abstract here.   
+DELETE THE ABOVE TEXT. 
+ 
+ 
+ 
+ 
+The Summary is the last of the Preliminary pages. 
+The Abstract may have the same content as the Extended Abstract but the 
+format is different.   The Abstract is part of the body of your work and so 
+the Abstract must have the same spacing as the body of the thesis.  
+Abstract should contain your name and your supervisor/s name at the 
+bottom. 
+DELETE THIS INSTRUCTIONAL TEXT BOX WHEN DONE. 
+
+===== PAGE 33 =====
+ 
+32 
+ 
+CHAPTER 1 
+INTRODUCTION  
+ 
+ 
+This is the first chapter of your thesis manuscript. Often it is titled, 
+'INTRODUCTION' but otherwise you may use any title that suits your purpose.  
+1.1. Replace this Text with Yours [This is a First-Level 
+Subheading] 
+ 
+ 
+This template file has been set up to meet the formatting requirements for a 
+thesis.  It is not magic, but it does get some of the confusing stuff taken care of: the 
+margins are correct; the table of contents is formatted correctly; the necessary parts 
+are in the right order; the page numbers will appear in the right place and in the right 
+form; it has an acceptable font face and size.  
+1.1.1. Replace this Text With Yours [This is a Second-Level 
+Subheading] 
+ 
+ 
+It will be pretty obvious when you need to get rid of some text in this 
+template. For example, this part of the introduction needs to go before you start 
+typing.  
+Things to be Careful of 
+• Figure and Table numbering 
+• Numbering of references (superscript, Arabic numerals and in order) 
+ 
+ 
+
+===== PAGE 34 =====
+ 
+33 
+ 
+CHAPTER 2 
+TITLE OF THE CHAPTER GOES HERE 
+ 
+ 
+How do you begin a new chapter using this template? What must you do to get 
+the page numbers to act correctly? Below are the steps for making a new chapter.  
+2.1. Replace this Text with Yours [This is a First-Level 
+Subheading] 
+ 
+ 
+To move to a new chapter, you must tell MS Word that you are moving on to a 
+new page. You do this by inserting a page break. A page break forces the next line of 
+text to appear at the top of a fresh page. 
+2.1.1. How to Insert a Page Break [This is a Second-Level 
+Subheading] 
+ 
+ 
+1. Go to the end of a chapter. That means put your cursor after the very last 
+character of that chapter. 
+ 
+2. Hit Return to move to a new paragraph. 
+ 
+3. From the Insert menu, choose Break. Click the button Page Break, and 
+click OK. 
+ 
+If you are in Normal View (see View menu), you'll see a dotted line across the 
+screen. That marks the end of the previous page. If you are in Page Layout view, 
+you'll just see the top of a new blank page.  
+ 
+Begin typing. If you are in Page Layout view, when you get to the end of the 
+first page, your text will skip to the next page. A page number will appear at the 
+bottom center of the new page. The number will be gray, and you can't edit it. That's 
+OK; that is the way it's supposed to look on the screen. 
+ 
+ 
+
+===== PAGE 35 =====
+ 
+34 
+ 
+ 
+Figure and table Placement  
+It is highly recommended that figures and tables be placed in the same page as much 
+as practicable wherever they are mentioned in the text for the first time. Tables and 
+figures may be landscaped or placed broadside. For a landscaped table or figure, the 
+title or caption is also landscaped the title or caption is on the same page as the table 
+or figure. Few examples are shown below. 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+5 
+6 
+7 
+8 
+9 
+10 
+See Figure 4 
+Figure 4: Bar Graphs 
+in Table 3 
+Table 3: Variation of size 
+See Figure 5 
+in Table 4 
+Table 4: Conductivity values 
+Figure 5: Absorbances 
+See Figure 6 
+See Figure 7 
+Figure 6: Design 
+Figure 7: Title 
+
+===== PAGE 36 =====
+ 
+35 
+ 
+Style for References 
+The following style should be used since citations in the text are numbered 
+sequentially and the “References” list is ordered numerically. This is the only 
+acceptable format. 
+(Note the style: Full surname followed by abbreviated first and middle name, 
+separated by semicolons, The abbreviated Journal Name in italics, the year of 
+publication in bold followed by the volume and starting page of the article.) 
+The following is the list of various type of references that you might cite. The format 
+for a particular reference type is shown as an example below. 
+ 
+• Citation of Journal article/communication/letter/note/review 
+(1) Shah, S.; Rangarajan, S.; Friedman, S. H. Angew. Chem., Int. Ed. 2005, 44, 
+1328−1332. 
+ 
+• Citation of Books 
+(52) Austin, G. T. Shreve’s Chemical Process Industries; McGraw−Hill: New York, 
+1984; Vol. 5. 
+ 
+• Citation of Patents 
+(25) Cramm, N.T., A Device to Simplify the Conversion of Bibliographic Information 
+into Citation Format. U.S. Patent 7,005,423, Sep 13, 2005. 
+ 
+• Citation of Conference Publication 
+(13) Zhao, H.; Yuman, C. Energy Analysis of a Steam Power Plant with Direct Air-
+Cooling System in China. In Asia-Paciﬁc Power and Energy Engineering Conference 
+2009 (APPEEC 2009); IEEE Press: Piscataway, NJ, 2009; pp 1−4. 
+ 
+• Citation of Web-accessed Information 
+For citing websites please see page 15. 
+ 
+ 
+ 
+
+===== PAGE 37 =====
+ 
+36 
+ 
+List of Publication(s) from M. Tech. research work 
+• Papers Published in Peer Reviewed Journals 
+1.    
+2.    
+3.    
+ 
+ 
+• Papers Published in Conferences 
+1.    
+2.    
+3.    
+ 
+ 
+• Book chapter 
+1.    
+2.    
+3.    
+ 
+ 
+ 
+• Patents 
+1.    
+2.    
+3.    
+ 
+ 
+Format should be as mentioned in Reference section. 
+ 
+ 
+
+===== PAGE 38 =====
+ 
+37 
+ 
+Preparation and Submission of Thesis 
+ 
+5.1. Supervisory Committee and Final Approval Forms 
+ 
+Some forms are included in this document. Other forms are available in the intranet of 
+IIT Patna website. Updated forms are to be used only. Some important forms are 
+available in this manual also. You may also contact CET OFFICE in this regard. 
+ 
+5.2. Curriculum vitae  
+ 
+This is optional. The student might wish to add his/her curriculum vitae limited 
+strictly to one page and without any photographs. This can be incorporated at the end 
+of the thesis. 
+ 
+5.3. CHECKLIST before submitting the final copies of your 
+thesis (NOT TO BE INCLUDED IN THESIS) 
+ 
+ Is the author’s full name on the title page and the abstract?  
+ Are the correct names and titles of the thesis supervisor(s) and program head(s) on 
+the title page?  
+ Does the title on the title and abstract pages agree with the title given to the 
+Program Coordinator?  
+ Is the publication date correct on the title page?  
+ Does the title page carry the appropriate copyright notice (or separate copyright 
+page whatever applicable) and, in cases where the student owns copyright, the 
+appropriate copyright permission statement?   
+ Is the supervisor’s name mentioned on the abstract page?  
+ Is the page-numbering sequence complete and correct?  
+ If you are printing double-sided (which is highly recommended), are page numbers 
+placed either in the center or on the outside edge of every page?  
+ Have you obtained permission to use previously published material?  
+ Are you printing the thesis, including the title page, on the correct paper?  
+
+===== PAGE 39 =====
+ 
+38 
+ 
+ Are you printing the correct number of copies?  
+ Are all necessary signatures on the title page of each copy?   
+ Has each copy been correctly collated? Are any pages missing or  are out of order?  
+ Are you submitting the correct number of copies? 
+ Ensure that the thesis is completely free of plagiarism.  
+ IPR declaration in case part of the thesis work carried out at the industry. 
+
+===== PAGE 40 =====
+ 
+39 
+ 
+INDEX
+A 
+Abbreviations 
+31, 35 
+Academic Section 
+3 
+Acknowledgement 
+27 
+Appendix 
+7, 22 
+Approval Page 
+4 
+Approval Requirement 
+17 
+B 
+Binding 
+21 
+Body of the Thesis 
+7 
+C 
+Caption 
+8, 39 
+CD 
+3, 20 
+Certificate 
+28 
+Checklist 
+41 
+Citation 
+7, 8, 18, 40 
+Common Errors 
+12 
+Common Mistakes 
+13 
+Content and Organization of Thesis Text 
+19 
+Contents 
+31 
+Continuity of Ideas 
+9 
+Coordinator 
+3, 41 
+Copyright 
+5, 17, 24 
+Curriculum Vitae 
+41 
+D 
+DC 
+3, 4 
+Declaration 
+29 
+Dissertation 
+12, 14, 16, 17 
+Evaluation Committee 
+3, 4, 5, 6, 16, 21, 25 
+Documentation 
+23 
+DVD 
+20 
+E 
+Equations 
+22 
+Examiner 
+3, 16 
+F 
+Features 
+15 
+Figure 
+9, 15, 17, 19, 21, 34, 37, 39 
+Font 
+7, 21, 37 
+Foreign Examiner 
+3 
+Formatting 
+3 
+Forms 
+41 
+G 
+General Information 
+15 
+ 
+Good Writing 
+9 
+Guidelines for Preparing and Submitting the 
+Thesis of a Thesis 
+3 
+Guidelines on the Preparation of a Thesis 3, 8 
+H 
+Handbook 
+15 
+Hard Copy 
+3, 15, 17 
+Headers and Footers 
+22 
+I 
+Infringement 
+17 
+Institute Regulations 
+15, 16 
+International System of Units 
+10 
+Introduction 
+37 
+L 
+Line Spacing 
+3, 7, 10, 21 
+M 
+Margin 
+21, 22 
+Mathematical Expressions 
+10 
+O 
+Objectives 
+7, 15 
+Overriding Rule 
+14 
+P 
+Page Numbering 
+9, 20 
+Paper Quality 
+19 
+Paragraph 
+9, 14, 21, 27, 38 
+Printing 
+20, 42 
+Publication of Thesis Involving Publication, 
+Patents and Restricted Data 
+16 
+Publications 
+17, 30 
+R 
+Reference 3, 7, 8, 9, 15, 21, 22, 29, 30, 37, 40 
+S 
+SI unit 
+10, 11, 12 
+Size 
+3, 4, 7, 19, 21, 37 
+Soft Copy 
+3 
+Abstract 
+31, 36 
+Supervisory Committee 
+41 
+Symbols 
+4, 10, 11, 31, 35 
+
+===== PAGE 41 =====
+ 
+40 
+ 
+T 
+Table 
+8, 9, 15, 17, 19, 21, 22, 23, 33, 37, 39 
+Tables and Figures 
+8, 9, 23 
+Template 
+4, 23, 37, 38 
+Tenses 
+10 
+Thesis Template 
+23 
+Title 3, 4, 7, 8, 9, 16, 18, 21, 22, 37, 39, 41, 42 
+Title of the Thesis 
+3 
+Title Page 
+3, 4, 17 
+Topic Approval 
+16 
+V 
+Verb 
+10 
+W 
+Website 
+12, 41 
+Writing Style 
+23 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+
+===== PAGE 42 =====
+ 
+41 
+ 
+Suggestive Guidelines (NOT TO BE INCLUDED IN 
+THESIS) 
+ 
+M.Tech. students are expected to adhere to the following suggestive guidelines: 
+ 
+1. Introduction (Chapter 1) 
+The introduction must contain a general overview about the topic of interest citing 
+all important breakthroughs in the field, describing them adequately keeping in 
+view the scopes and limitations. This will be a preamble to the scopes and 
+objectives of the study. 
+ 
+2. General Experimental/Theoretical Techniques and Instrumentation  
+The general experimental (instruments, parameters, etc.) and theoretical 
+(published methods, programs etc.) methods must be mentioned and justified. 
+This should be followed by adequate description of the necessary instrumentation 
+involved to carry out the present investigation. 
+ 
+3. This chapter shall describe the actual work in the present study. The chapter 
+must outline the current related literature about the subject of interest along 
+with a specific objective, description of results, discussions derived from 
+them, conclusions derived, experimental procedure and references. Like this 
+chapter, there may be others needed to meet the general objectives described 
+in the introduction. The extent of work is solely the prerogative of the advisor. 
+ 
+4. An executive conclusion based on the results that justify all the objectives 
+described in the introduction. 
+ 
+5. Glossary 
