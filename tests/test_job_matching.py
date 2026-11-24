@@ -2,7 +2,7 @@ import importlib.util
 import pathlib
 import unittest
 
-from adk_agent.agent import find_best_job_match, infer_terraform_action
+from adk_agent.agent import find_best_job_match, infer_terraform_action, infer_direct_deployment_prompt
 
 
 script_path = pathlib.Path(__file__).resolve().parents[1] / "scripts" / "jenkins_init_jobs_fixed.py"
@@ -45,6 +45,38 @@ class TestJobMatching(unittest.TestCase):
         ]
         self.assertEqual(find_best_job_match("deploy kubernetes cluster with grafana", jobs), "Kubernetes-Grafana-Deploy")
         self.assertEqual(find_best_job_match("run grafana in a kind cluster", jobs), "Kubernetes-Grafana-Deploy")
+
+    def test_matches_kubernetes_loki_deploy_aliases(self):
+        jobs = [
+            "Kubernetes-Grafana-Deploy",
+            "Kubernetes-Loki-Deploy",
+        ]
+        self.assertEqual(find_best_job_match("deploy loki in kubernetes", jobs), "Kubernetes-Loki-Deploy")
+        self.assertEqual(find_best_job_match("run loki and grafana in kind", jobs), "Kubernetes-Loki-Deploy")
+
+    def test_infers_direct_loki_deployment_prompts(self):
+        self.assertEqual(
+            infer_direct_deployment_prompt("Could you deploy Loki on a kuberenetes cluster"),
+            ("Kubernetes-Loki-Deploy", "deploy"),
+        )
+        self.assertEqual(
+            infer_direct_deployment_prompt("Please destroy Loki"),
+            ("Kubernetes-Loki-Deploy", "destroy"),
+        )
+
+    def test_infers_direct_ansible_observability_prompts(self):
+        self.assertEqual(
+            infer_direct_deployment_prompt("Use Ansible to scrape Ollama metrics with Prometheus"),
+            ("Ansible-Prometheus-Metrics", "deploy"),
+        )
+        self.assertEqual(
+            infer_direct_deployment_prompt("Create a Grafana dashboard for resource monitoring"),
+            ("Ansible-Grafana-Dashboard", "deploy"),
+        )
+        self.assertEqual(
+            infer_direct_deployment_prompt("Use Ansible and Promtail to collect Loki logs"),
+            ("Ansible-Loki-Logs", "deploy"),
+        )
 
 
 if __name__ == "__main__":

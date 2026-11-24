@@ -11,7 +11,7 @@ terraform {
 
 provider "docker" {}
 
-resource "docker_network" "devops_network" {
+data "docker_network" "devops_network" {
   name = var.docker_network_name
 }
 
@@ -32,7 +32,7 @@ resource "docker_container" "prometheus_server" {
   }
 
   networks_advanced {
-    name = docker_network.devops_network.name
+    name = data.docker_network.devops_network.name
   }
 
   command = [

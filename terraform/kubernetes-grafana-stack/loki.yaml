@@ -1,0 +1,188 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loki-config
+  namespace: monitoring
+data:
+  loki.yaml: |
+    auth_enabled: false
+    server:
+      http_listen_port: 3100
+      grpc_listen_port: 9096
+    common:
+      instance_addr: 127.0.0.1
+      path_prefix: /loki
+      storage:
+        filesystem:
+          chunks_directory: /loki/chunks
+          rules_directory: /loki/rules
+      replication_factor: 1
+      ring:
+        kvstore:
+          store: inmemory
+    schema_config:
+      configs:
+        - from: 2024-01-01
+          store: tsdb
+          object_store: filesystem
+          schema: v13
+          index:
+            prefix: index_
+            period: 24h
+    limits_config:
+      allow_structured_metadata: true
+      volume_enabled: true
+    ruler:
+      alertmanager_url: http://localhost:9093
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki
+  template:
+    metadata:
+      labels:
+        app: loki
+    spec:
+      containers:
+        - name: loki
+          image: grafana/loki:3.3.2
+          args:
+            - -config.file=/etc/loki/loki.yaml
+          ports:
+            - name: http
+              containerPort: 3100
+            - name: grpc
+              containerPort: 9096
+          readinessProbe:
+            httpGet:
+              path: /ready
+              port: 3100
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /ready
+              port: 3100
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          volumeMounts:
+            - name: config
+              mountPath: /etc/loki
+            - name: storage
+              mountPath: /loki
+      volumes:
+        - name: config
+          configMap:
+            name: loki-config
+        - name: storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki
+  namespace: monitoring
+spec:
+  type: ClusterIP
+  selector:
+    app: loki
+  ports:
+    - name: http
+      port: 3100
+      targetPort: 3100
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: loki-gateway-config
+  namespace: monitoring
+data:
+  default.conf: |
+    server {
+        listen 8080;
+        server_name _;
+
+        location = / {
+            default_type text/html;
+            return 200 '<!doctype html><html><head><meta charset="utf-8"><title>Loki is running</title><style>body{font-family:system-ui;max-width:760px;margin:12vh auto;padding:24px;color:#213547}a{display:inline-block;margin:8px 8px 8px 0;padding:10px 14px;border-radius:6px;background:#5a67d8;color:white;text-decoration:none}.status{color:#16803a}</style></head><body><h1>Loki is running</h1><p class="status">Status: ready</p><p>Grafana Loki is available through the monitoring stack.</p><a href="http://localhost:3000">Open Grafana</a><a href="/ready">Check readiness</a><a href="/loki/api/v1/status/buildinfo">Build info</a></body></html>';
+        }
+
+        location = /ready {
+            proxy_pass http://loki.monitoring.svc.cluster.local:3100/ready;
+            proxy_http_version 1.1;
+        }
+
+        location /loki/ {
+            proxy_pass http://loki.monitoring.svc.cluster.local:3100;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+        }
+
+        location /api/ {
+            proxy_pass http://loki.monitoring.svc.cluster.local:3100;
+            proxy_http_version 1.1;
+            proxy_set_header Host $host;
+        }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: loki-gateway
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: loki-gateway
+  template:
+    metadata:
+      labels:
+        app: loki-gateway
+    spec:
+      containers:
+        - name: nginx
+          image: nginx:1.27-alpine
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          volumeMounts:
+            - name: config
+              mountPath: /etc/nginx/conf.d
+      volumes:
+        - name: config
+          configMap:
+            name: loki-gateway-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: loki-gateway
+  namespace: monitoring
+spec:
+  type: NodePort
+  selector:
+    app: loki-gateway
+  ports:
+    - name: http
+      port: 3100
+      targetPort: 8080
+      nodePort: 31100

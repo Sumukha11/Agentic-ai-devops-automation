@@ -1,0 +1,45 @@
+- name: Deploy Prometheus metrics scrapers
+  hosts: local
+  gather_facts: false
+  vars:
+    project_dir: "{{ playbook_dir | dirname }}"
+  tasks:
+    - name: Start Prometheus, node exporter, cAdvisor, and Ollama exporter
+      ansible.builtin.shell: |
+        set -e
+        services="node-exporter cadvisor ollama-exporter"
+        if ! docker ps -a --format '{{"{{"}}.Names{{"}}"}}' | grep -qx "prometheus-server"; then
+          services="prometheus $services"
+        fi
+
+        if docker compose version >/dev/null 2>&1; then
+          docker compose --profile monitoring -p agentic-ai-devops-automation -f "{{ project_dir }}/docker-compose.yml" up -d $services
+        elif command -v docker-compose >/dev/null 2>&1; then
+          docker-compose --profile monitoring -p agentic-ai-devops-automation -f "{{ project_dir }}/docker-compose.yml" up -d $services
+        else
+          echo "Docker Compose is not installed" >&2
+          exit 127
+        fi
+      changed_when: true
+
+    - name: Wait for Prometheus
+      ansible.builtin.uri:
+        url: http://prometheus-server:9090/-/ready
+        status_code: 200
+      register: prometheus_ready
+      retries: 30
+      delay: 2
+      until: prometheus_ready.status == 200
+
+    - name: Verify Ollama exporter target
+      ansible.builtin.uri:
+        url: http://ollama-exporter:9108/metrics
+        status_code: 200
+      register: ollama_exporter_ready
+      retries: 20
+      delay: 2
+      until: ollama_exporter_ready.status == 200
+
+    - name: Print Prometheus URL
+      ansible.builtin.debug:
+        msg: "Prometheus is ready at http://localhost:9090"

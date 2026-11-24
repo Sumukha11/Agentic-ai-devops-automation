@@ -1,0 +1,120 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-devops-resources
+  namespace: monitoring
+  labels:
+    grafana_dashboard: "1"
+data:
+  devops-resources.json: |
+    {
+      "annotations": {"list": []},
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "panels": [
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "percent"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 8, "x": 0, "y": 0},
+          "id": 1,
+          "title": "Host CPU Usage",
+          "type": "timeseries",
+          "targets": [{"expr": "100 - (avg by(instance) (rate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)", "legendFormat": "CPU {{instance}}", "refId": "A"}]
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 8, "x": 8, "y": 0},
+          "id": 2,
+          "title": "Host Memory Available",
+          "type": "timeseries",
+          "targets": [{"expr": "node_memory_MemAvailable_bytes", "legendFormat": "Available {{instance}}", "refId": "A"}]
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "bytes"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 8, "x": 16, "y": 0},
+          "id": 3,
+          "title": "Container Memory Usage",
+          "type": "timeseries",
+          "targets": [{"expr": "sum by(name) (container_memory_usage_bytes)", "legendFormat": "{{name}}", "refId": "A"}]
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 8, "x": 0, "y": 8},
+          "id": 4,
+          "title": "Ollama Installed Models",
+          "type": "stat",
+          "targets": [{"expr": "ollama_models", "legendFormat": "Models", "refId": "A"}]
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 8, "x": 8, "y": 8},
+          "id": 5,
+          "title": "Ollama Running Models",
+          "type": "stat",
+          "targets": [{"expr": "ollama_running_models", "legendFormat": "Running", "refId": "A"}]
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "short"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 8, "x": 16, "y": 8},
+          "id": 6,
+          "title": "Ollama Availability",
+          "type": "stat",
+          "targets": [{"expr": "ollama_up", "legendFormat": "Up", "refId": "A"}]
+        },
+        {
+          "datasource": {"type": "prometheus", "uid": "prometheus"},
+          "fieldConfig": {"defaults": {"unit": "reqps"}, "overrides": []},
+          "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+          "id": 7,
+          "title": "FastAPI Request Rate",
+          "type": "timeseries",
+          "targets": [{"expr": "sum by(endpoint) (rate(devops_fastapi_requests_total[5m]))", "legendFormat": "{{endpoint}}", "refId": "A"}]
+        },
+        {
+          "datasource": {"type": "loki", "uid": "loki"},
+          "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+          "id": 8,
+          "title": "Docker and Application Logs",
+          "type": "logs",
+          "targets": [{"expr": "{job=~\".+\"}", "refId": "A"}],
+          "options": {"showTime": true, "showLabels": true, "wrapLogMessage": true}
+        }
+      ],
+      "refresh": "15s",
+      "schemaVersion": 39,
+      "tags": ["devops", "prometheus", "loki", "ollama"],
+      "templating": {"list": []},
+      "time": {"from": "now-15m", "to": "now"},
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "DevOps Resource Monitoring",
+      "uid": "devops-resources",
+      "version": 1
+    }
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-providers
+  namespace: monitoring
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: devops
+        orgId: 1
+        type: file
+        disableDeletion: false
+        updateIntervalSeconds: 15
+        allowUiUpdates: true
+        options:
+          path: /var/lib/grafana/dashboards
+          foldersFromFilesStructure: false

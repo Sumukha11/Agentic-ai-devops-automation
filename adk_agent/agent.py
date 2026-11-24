@@ -7,7 +7,11 @@ import difflib
 import re
 import subprocess
 import shutil
-from langchain_ollama import OllamaLLM
+
+try:
+    from langchain_ollama import OllamaLLM
+except ImportError:
+    OllamaLLM = None
 
 FASTAPI_URL = os.getenv("FASTAPI_URL", "http://fastapi:8000")
 OLLAMA_URL = os.getenv("OLLAMA_URL", "http://ollama:11434")
@@ -20,6 +24,9 @@ def init_llm():
     global llm
     if llm is not None:
         return llm
+    if OllamaLLM is None:
+        print("⚠️ langchain-ollama is not installed; using HTTP fallback.")
+        return None
     
     max_retries = 3
     base_delay = 2
@@ -135,6 +142,16 @@ def find_best_job_match(user_input, available_jobs):
     if not available_jobs:
         return None
 
+    lower_input = (user_input or "").lower()
+    if "loki" in lower_input:
+        for job in available_jobs:
+            if job and "loki" in job.lower():
+                return job
+    if "grafana" in lower_input:
+        for job in available_jobs:
+            if job and "grafana" in job.lower():
+                return job
+
     normalized_jobs = {}
     for job in available_jobs:
         if not job:
@@ -197,7 +214,6 @@ def infer_terraform_action(prompt: str):
 def cleanup_stale_prometheus_resources():
     cleanup_commands = [
         ["docker", "rm", "-f", "prometheus-server"],
-        ["docker", "network", "rm", "prometheus-net"],
         ["docker", "ps", "-aq", "--filter", "name=prometheus-server"],
     ]
     for cmd in cleanup_commands:
@@ -212,17 +228,15 @@ def cleanup_stale_prometheus_resources():
         except Exception:
             pass
 
-    # Also remove stale docker-compose-created default network if it exists.
-    try:
-        subprocess.run(["docker", "network", "prune", "-f"], capture_output=True, text=True, check=False)
-    except Exception:
-        pass
-
     return {"status": "CLEANED"}
 
 
 def list_terraform_jobs():
-    base_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "terraform")
+    base_dir = os.getenv("WORKSPACE_DIR")
+    if not base_dir:
+        mounted_workspace = "/workspace"
+        base_dir = mounted_workspace if os.path.isdir(mounted_workspace) else os.path.dirname(os.path.dirname(__file__))
+    base_dir = os.path.join(base_dir, "terraform")
     prometheus_dir = os.path.join(base_dir, "local-docker-stack")
     kubernetes_dir = os.path.join(base_dir, "kubernetes-grafana-stack")
     return [
@@ -237,6 +251,43 @@ def list_terraform_jobs():
             "path": kubernetes_dir,
             "description": "Deploy a local Kind Kubernetes cluster and Grafana inside the monitoring namespace.",
             "type": "terraform"
+        },
+        {
+            "name": "Kubernetes-Loki-Deploy",
+            "path": kubernetes_dir,
+            "description": "Deploy Loki and Grafana on the local Kind Kubernetes cluster in the monitoring namespace.",
+            "type": "terraform"
+        }
+    ]
+
+
+def list_ansible_jobs():
+    base_dir = os.getenv("WORKSPACE_DIR")
+    if not base_dir:
+        mounted_workspace = "/workspace"
+        base_dir = mounted_workspace if os.path.isdir(mounted_workspace) else os.path.dirname(os.path.dirname(__file__))
+    ansible_dir = os.path.join(base_dir, "ansible")
+    return [
+        {
+            "name": "Ansible-Prometheus-Metrics",
+            "path": ansible_dir,
+            "description": "Deploy Prometheus scrapers for Ollama and project services.",
+            "type": "ansible",
+            "playbook": "prometheus.yml"
+        },
+        {
+            "name": "Ansible-Grafana-Dashboard",
+            "path": ansible_dir,
+            "description": "Provision the Grafana Prometheus resource monitoring dashboard.",
+            "type": "ansible",
+            "playbook": "grafana-dashboard.yml"
+        },
+        {
+            "name": "Ansible-Loki-Logs",
+            "path": ansible_dir,
+            "description": "Deploy Loki and Docker log collection with Promtail.",
+            "type": "ansible",
+            "playbook": "loki-logs.yml"
         }
     ]
 
@@ -441,6 +492,8 @@ EXAMPLES (output EXACTLY like this):
 - "deploy prometheus server" → {"tool": "trigger_build", "arguments": {"job_name": "Prometheus-Server-Deploy"}}
 - "run all tests" → {"tool": "trigger_builds", "arguments": {"job_names": ["Test-API", "Test-Frontend"]}}
 - "trigger all jobs" → {"tool": "trigger_builds", "arguments": {"job_names": ["Job1", "Job2", "Job3"]}}
+- "deploy loki in kubernetes" → {"tool": "trigger_build", "arguments": {"job_name": "Kubernetes-Loki-Deploy"}}
+- "destroy the loki kubernetes deployment" → {"tool": "trigger_build", "arguments": {"job_name": "Kubernetes-Loki-Deploy"}}
 
 ═════════════════════════════════════════════════════════════════════════════════
 
@@ -454,6 +507,39 @@ REMEMBER:
 def run_agent(user_prompt: str):
     try:
         print(f"\n=== USER === {user_prompt}")
+
+        direct_deployment = infer_direct_deployment_prompt(user_prompt)
+        if direct_deployment:
+            matched_job, action = direct_deployment
+            if matched_job.startswith("Ansible-"):
+                deployment_result = run_ansible_playbook(matched_job)
+            elif matched_job in ("Kubernetes-Grafana-Deploy", "Kubernetes-Loki-Deploy"):
+                if action == "destroy":
+                    deployment_result = run_kubernetes_grafana_destroy(matched_job)
+                else:
+                    deployment_result = run_kubernetes_grafana_deploy(matched_job)
+            elif action == "destroy":
+                deployment_result = run_terraform_destroy(matched_job)
+            else:
+                deployment_result = run_terraform_deploy(matched_job)
+
+            response = {
+                "message": deployment_result.get("message", "Terraform deployment result."),
+                "job": matched_job,
+                "status": deployment_result.get("status", "ERROR"),
+                "details": deployment_result.get("details")
+            }
+            if deployment_result.get("error") is not None:
+                response["error"] = deployment_result["error"]
+                if deployment_result.get("details"):
+                    response["error_details"] = deployment_result["details"]
+            if deployment_result.get("grafana_url"):
+                response["grafana_url"] = deployment_result["grafana_url"]
+                response["credentials"] = deployment_result["credentials"]
+            if deployment_result.get("loki_url"):
+                response["loki_url"] = deployment_result["loki_url"]
+            return {"success": deployment_result.get("error") is None, "response": response}
+
         llm_response = call_llm(user_prompt)
         print(f"=== LLM RESPONSE === {llm_response}")
         
@@ -468,10 +554,12 @@ def run_agent(user_prompt: str):
         if tool_name == "list_jobs":
             jobs_result = list_jenkins_jobs()
             terraform_jobs = list_terraform_jobs()
+            ansible_jobs = list_ansible_jobs()
             response = {
-                "message": "Here are the available Jenkins jobs and Terraform deployment scripts.",
+                "message": "Here are the available Jenkins jobs, Terraform deployments, and Ansible playbooks.",
                 "jobs": jobs_result.get("jobs", []),
-                "terraform_scripts": terraform_jobs
+                "terraform_scripts": terraform_jobs,
+                "ansible_playbooks": ansible_jobs
             }
 
         # TRIGGER SINGLE BUILD
@@ -479,9 +567,12 @@ def run_agent(user_prompt: str):
             jobs_result = list_jenkins_jobs()
             available_jobs = jobs_result.get("jobs", [])
             terraform_jobs = list_terraform_jobs()
+            ansible_jobs = list_ansible_jobs()
             terraform_names = [item["name"] for item in terraform_jobs]
-            all_jobs = available_jobs + terraform_names
+            ansible_names = [item["name"] for item in ansible_jobs]
+            all_jobs = available_jobs + terraform_names + ansible_names
             requested_job = args.get("job_name", "").strip()
+            action = infer_terraform_action(requested_job)
             parameters = args.get("parameters") if isinstance(args.get("parameters"), dict) else None
             matched_job = find_best_job_match(requested_job, all_jobs)
 
@@ -496,29 +587,33 @@ def run_agent(user_prompt: str):
                     "terraform_scripts": terraform_jobs
                 }
             else:
-                if matched_job in terraform_names:
-                    action = infer_terraform_action(requested_job)
-                    if matched_job == "Kubernetes-Grafana-Deploy":
-                        if action == "destroy":
-                            deployment_result = run_kubernetes_grafana_destroy(matched_job)
-                        else:
-                            deployment_result = run_kubernetes_grafana_deploy(matched_job)
-                    elif action == "destroy":
-                        deployment_result = run_terraform_destroy(matched_job)
+                if matched_job.startswith("Ansible-"):
+                    deployment_result = run_ansible_playbook(matched_job)
+                elif matched_job in ("Kubernetes-Grafana-Deploy", "Kubernetes-Loki-Deploy"):
+                    if action == "destroy":
+                        deployment_result = run_kubernetes_grafana_destroy(matched_job)
                     else:
-                        deployment_result = run_terraform_deploy(matched_job)
-                    response = {
-                        "message": deployment_result.get("message", "Terraform deployment result."),
-                        "job": matched_job,
-                        "status": deployment_result.get("status", "ERROR"),
-                        "details": deployment_result.get("details"),
-                        "terraform_scripts": terraform_jobs
-                    }
-                    if deployment_result.get("error") is not None:
-                        response["error"] = deployment_result.get("error")
-                    if deployment_result.get("grafana_url"):
-                        response["grafana_url"] = deployment_result["grafana_url"]
-                        response["credentials"] = deployment_result["credentials"]
+                        deployment_result = run_kubernetes_grafana_deploy(matched_job)
+                elif action == "destroy":
+                    deployment_result = run_terraform_destroy(matched_job)
+                else:
+                    deployment_result = run_terraform_deploy(matched_job)
+                response = {
+                    "message": deployment_result.get("message", "Terraform deployment result."),
+                    "job": matched_job,
+                    "status": deployment_result.get("status", "ERROR"),
+                    "details": deployment_result.get("details"),
+                    "terraform_scripts": terraform_jobs
+                }
+                if deployment_result.get("error") is not None:
+                    response["error"] = deployment_result.get("error")
+                    if deployment_result.get("details"):
+                        response["error_details"] = deployment_result["details"]
+                if deployment_result.get("grafana_url"):
+                    response["grafana_url"] = deployment_result["grafana_url"]
+                    response["credentials"] = deployment_result["credentials"]
+                if deployment_result.get("loki_url"):
+                    response["loki_url"] = deployment_result["loki_url"]
                 else:
                     build_result = trigger_jenkins_build(matched_job, parameters=parameters)
                     
@@ -704,7 +799,8 @@ def run_kubernetes_grafana_deploy(terraform_name: str):
             check=False,
         )
         if apply.returncode != 0:
-            return {"error": "Kubernetes/Grafana Terraform apply failed", "details": apply.stderr or apply.stdout}
+            apply_details = "\n".join(part for part in (apply.stdout, apply.stderr) if part)
+            return {"error": "Kubernetes/Grafana Terraform apply failed", "details": apply_details or "Terraform apply returned a non-zero exit code."}
 
         output = subprocess.run(
             ["terraform", "-chdir=" + project_dir, "output", "-json"],
@@ -716,13 +812,67 @@ def run_kubernetes_grafana_deploy(terraform_name: str):
         return {
             "status": "DEPLOYED",
             "job": terraform_name,
-            "message": "Kind Kubernetes cluster deployed successfully and Grafana is running in the monitoring namespace.",
+            "message": "Kind Kubernetes cluster deployed successfully and Loki with Grafana is running in the monitoring namespace." if terraform_name == "Kubernetes-Loki-Deploy" else "Kind Kubernetes cluster deployed successfully and Grafana is running in the monitoring namespace.",
             "terraform_output": output.stdout if output.returncode == 0 else None,
             "details": apply.stdout or "Deployment completed.",
             "grafana_url": "http://localhost:3000",
+            "loki_url": "http://localhost:3100" if terraform_name == "Kubernetes-Loki-Deploy" else None,
             "credentials": {"username": "admin", "password": "admin"},
         }
     except subprocess.TimeoutExpired as exc:
         return {"error": "Kubernetes/Grafana deployment timed out", "details": str(exc)}
     except Exception as exc:
         return {"error": f"Failed to deploy Kubernetes/Grafana: {str(exc)}"}
+
+def infer_direct_deployment_prompt(prompt: str):
+    """Route unambiguous infrastructure requests without relying on the LLM."""
+    text = re.sub(r"[^a-z]+", " ", (prompt or "").lower())
+    destroying = any(word in text.split() for word in ("destroy", "remove", "teardown", "delete", "stop"))
+
+    if "loki" in text and any(word in text for word in ("log", "ansible", "collect", "promtail")):
+        return "Ansible-Loki-Logs", "deploy"
+    if "grafana" in text and any(word in text for word in ("dashboard", "ansible", "monitor", "resources")):
+        return "Ansible-Grafana-Dashboard", "deploy"
+    if "prometheus" in text and any(word in text for word in ("ansible", "scrape", "export", "metrics", "ollama")):
+        return "Ansible-Prometheus-Metrics", "deploy"
+    if "loki" in text:
+        return "Kubernetes-Loki-Deploy", "destroy" if destroying else "deploy"
+    if "grafana" in text or ("kubernetes" in text and "cluster" in text):
+        return "Kubernetes-Grafana-Deploy", "destroy" if destroying else "deploy"
+    if "prometheus" in text:
+        return "Prometheus-Server-Deploy", "destroy" if destroying else "deploy"
+    return None
+
+def run_ansible_playbook(terraform_name: str):
+    job = next((item for item in list_ansible_jobs() if item["name"] == terraform_name), None)
+    if not job:
+        return {"error": "Ansible automation job was not found."}
+
+    ansible_playbook = shutil.which("ansible-playbook")
+    if not ansible_playbook:
+        return {"error": "Ansible is not installed in the agent container."}
+
+    project_dir = os.path.dirname(job["path"])
+    playbook = os.path.join(job["path"], job["playbook"])
+    inventory = os.path.join(job["path"], "inventory.ini")
+    try:
+        result = subprocess.run(
+            [ansible_playbook, "-i", inventory, playbook],
+            cwd=project_dir,
+            capture_output=True,
+            text=True,
+            timeout=900,
+            check=False,
+        )
+        if result.returncode != 0:
+            return {"error": "Ansible playbook failed", "details": "\n".join(part for part in (result.stdout, result.stderr) if part)}
+        return {
+            "status": "DEPLOYED",
+            "job": terraform_name,
+            "message": "Ansible observability playbook completed successfully.",
+            "details": result.stdout,
+        }
+    except subprocess.TimeoutExpired as exc:
+        return {"error": "Ansible playbook timed out", "details": str(exc)}
+    except Exception as exc:
+        return {"error": f"Failed to run Ansible playbook: {str(exc)}"}

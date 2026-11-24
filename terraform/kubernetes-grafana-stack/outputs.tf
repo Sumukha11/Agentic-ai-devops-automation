@@ -16,3 +16,8 @@ output "grafana_credentials" {
   }
   sensitive = true
 }
+
+output "loki_url" {
+  description = "Loki HTTP API URL on the local host"
+  value       = "http://localhost:3100"
+}

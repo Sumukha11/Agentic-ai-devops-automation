@@ -26,11 +26,11 @@ def check_service(name, config):
             status = response.status_code
             print(f"{name}: {status}")
 
-            # ✅ Server errors → always fail
+            #  Server errors  always fail
             if status >= 500:
                 raise Exception(f"{name} server error")
 
-            # ✅ Yahoo special handling
+            #  Yahoo special handling
             if name == "Yahoo Finance" and status == 429:
                 print(f"{name}: Rate limited (non-critical)")
                 return True  # treat as success

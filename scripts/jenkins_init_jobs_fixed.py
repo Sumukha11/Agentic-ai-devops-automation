@@ -239,8 +239,20 @@ def load_groovy_jobs():
     return jobs
 
 def create_pipeline_xml(script, description=""):
+    def xml_safe(text):
+        text = "".join(
+            ch for ch in str(text)
+            if ch in "\t\n\r" or
+               (0x20 <= ord(ch) <= 0xD7FF and not 0x7F <= ord(ch) <= 0x9F) or
+               (0xE000 <= ord(ch) <= 0xFFFD) or
+               (0x10000 <= ord(ch) <= 0x10FFFF)
+        )
+        return text.replace("]]>", "]]]]><![CDATA[>")
+
+    script = xml_safe(script)
+    escaped_description = xml_safe(description)
     escaped_description = (
-        description.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+        escaped_description.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
     )
     return f"""<?xml version='1.1' encoding='UTF-8'?>\n<flow-definition plugin='workflow-job'>
   <actions/>

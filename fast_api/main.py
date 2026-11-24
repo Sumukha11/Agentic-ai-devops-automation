@@ -9,12 +9,16 @@ from jenkins_client import (
     get_last_status,
     get_logs,
 )
+from prometheus_client import Counter, generate_latest, CONTENT_TYPE_LATEST
+from fastapi.responses import Response
 
 app = FastAPI(
     title="Jenkins Automation API",
     description="FastAPI wrapper for Jenkins CI/CD",
     version="2.0"
 )
+
+REQUEST_COUNT = Counter("devops_fastapi_requests_total", "FastAPI requests", ["method", "endpoint"])
 
 
 # -------------------------------
@@ -34,6 +38,11 @@ def root():
         "message": "FastAPI Jenkins Wrapper Running",
         "status": "OK"
     }
+
+
+@app.get("/health")
+def health():
+    return {"status": "healthy", "service": "fastapi"}
 
 
 # -------------------------------
@@ -150,3 +159,15 @@ def job_logs(job_name: str, build_number: int):
         "build_number": build_number,
         "logs": logs_value
     }
+
+
+@app.middleware("http")
+async def count_requests(request, call_next):
+    response = await call_next(request)
+    REQUEST_COUNT.labels(request.method, request.url.path).inc()
+    return response
+
+
+@app.get("/metrics")
+def metrics():
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)

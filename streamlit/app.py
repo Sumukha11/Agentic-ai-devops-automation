@@ -31,7 +31,7 @@ if prompt:
                 response = requests.post(
                     AGENT_URL,
                     json={"prompt": prompt},
-                    timeout=120
+                    timeout=1800
                 )
 
                 api_response = response.json()
@@ -51,21 +51,27 @@ if prompt:
                     status_value = result.get("status")
 
                     if error_value is not None and str(error_value).strip() not in ("", "None"):
+                        error_details = result.get("error_details") or result.get("details")
                         reply = f"❌ **Error**\n\n{error_value}"
-
+                        if error_details:
+                            reply += f"\n\n**Details**\n```text\n{str(error_details)[-4000:]}\n```"
+                        
                     elif status_value == "DEPLOYED":
                         job_name = result.get("job", "Prometheus-Server-Deploy")
                         message = result.get("message", "The deployment completed successfully.")
-                        if job_name == "Kubernetes-Grafana-Deploy":
+                        if job_name in ("Kubernetes-Grafana-Deploy", "Kubernetes-Loki-Deploy"):
                             access_url = result.get("grafana_url", "http://localhost:3000")
+                            loki_url = result.get("loki_url")
                             credentials = result.get("credentials", {})
+                            loki_section = f"\n### 🪵 Loki\n[Open Loki status page]({loki_url}) — [Ready endpoint]({loki_url}/ready)" if loki_url else ""
                             reply = f"""✅ **Deployment Successful**
 
 ### 🚀 Application
 `{job_name}`
 
-### 📍 Access URL
+### 📍 Grafana URL
 `{access_url}`
+{loki_section}
 
 ### 👤 Grafana Credentials
 - Username: `{credentials.get('username', 'admin')}`
@@ -100,13 +106,23 @@ The Prometheus server is now running and ready to open in your browser."""
                     elif "jobs" in result:
                         jobs = result.get("jobs", [])
                         terraform_scripts = result.get("terraform_scripts", [])
+                        ansible_playbooks = result.get("ansible_playbooks", [])
                         reply = "📋 **Available Jenkins Jobs**\n\n"
                         for job in jobs:
                             reply += f"- `{job}`\n"
                         if terraform_scripts:
-                            reply += "\n## ☁️ Terraform Scripts\n\n"
+                            reply += "\n## ☁️ Terraform Deployments\n\n"
                             for item in terraform_scripts:
-                                name = item.get("name", "Unknown Terraform Script")
+                                name = item.get("name", "Unknown Terraform Deployment")
+                                desc = item.get("description", "")
+                                reply += f"- `{name}`"
+                                if desc:
+                                    reply += f" - {desc}"
+                                reply += "\n"
+                        if ansible_playbooks:
+                            reply += "\n## 🔧 Ansible Playbooks\n\n"
+                            for item in ansible_playbooks:
+                                name = item.get("name", "Unknown Ansible Playbook")
                                 desc = item.get("description", "")
                                 reply += f"- `{name}`"
                                 if desc:

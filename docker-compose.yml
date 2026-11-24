@@ -53,6 +53,9 @@ services:
       - ./:/workspace
     environment:
       - JENKINS_URL=http://jenkins:8080
+    networks:
+      - default
+      - prometheus-net
     restart: unless-stopped
 
   ollama:
@@ -67,6 +70,8 @@ services:
       - OLLAMA_HOST=0.0.0.0:11434
       - OLLAMA_DEBUG=0
       - OLLAMA_KEEP_ALIVE=24h
+    networks:
+      - prometheus-net
     healthcheck:
       test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
       interval: 10s
@@ -84,33 +89,35 @@ services:
     restart: "no"
     environment:
       - OLLAMA_HOST=http://ollama:11434
-    entrypoint: |-
-      /bin/bash -c "
-      set -e
+    networks:
+      - prometheus-net
+    entrypoint: ["/bin/bash", "-c"]
+    command:
+      - |
+        set -e
 
-      echo '[ollama-puller] Waiting for Ollama server to be ready...'
-      for i in {1..60}; do
-        if curl -sS http://ollama:11434/ > /dev/null 2>&1; then
-          echo '[ollama-puller] ✓ Ollama server is ready'
-          break
+        echo '[ollama-puller] Waiting for Ollama server to be ready...'
+        for i in {1..60}; do
+          if curl -sS http://ollama:11434/ > /dev/null 2>&1; then
+            echo '[ollama-puller] ✓ Ollama server is ready'
+            break
+          fi
+          echo "[ollama-puller] Waiting... ($$i/60)"
+          sleep 2
+        done
+
+        echo '[ollama-puller] Checking for qwen2.5:3b model...'
+
+        if ollama list | grep -q 'qwen2.5:3b'; then
+          echo '[ollama-puller] ✓ Model already present'
+          exit 0
         fi
-        echo \"[ollama-puller] Waiting... ($i/60)\"
-        sleep 2
-      done
 
-      echo '[ollama-puller] Checking for qwen2.5:3b model...'
+        echo '[ollama-puller] Pulling qwen2.5:3b model (this may take several minutes)...'
 
-      if ollama list | grep -q 'qwen2.5:3b'; then
-        echo '[ollama-puller] ✓ Model already present'
-        exit 0
-      fi
+        ollama pull qwen2.5:3b
 
-      echo '[ollama-puller] Pulling qwen2.5:3b model (this may take several minutes)...'
-
-      ollama pull qwen2.5:3b
-
-      echo '[ollama-puller] ✓ Model pull complete'
-      "
+        echo '[ollama-puller] ✓ Model pull complete'
 
   agent:
     build:
@@ -124,19 +131,22 @@ services:
         condition: service_started
       ollama:
         condition: service_started
-      ollama-puller:
-        condition: service_completed_successfully
     environment:
       - FASTAPI_URL=http://fastapi:8000
       - OLLAMA_URL=http://ollama:11434
       - DOCKER_HOST=unix:///var/run/docker.sock
       - TF_VAR_prometheus_config_path=/home/sumukha/Desktop/IITP-Project/Agentic-ai-devops-automation/terraform/local-docker-stack/prometheus/prometheus.yml
       - OLLAMA_MODEL=qwen2.5:3b
+      - WORKSPACE_DIR=/workspace
     restart: unless-stopped
     volumes:
       - ./:/workspace
       - /var/run/docker.sock:/var/run/docker.sock
       - /usr/bin/docker:/usr/local/bin/docker:ro
+    networks:
+      - prometheus-net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
   streamlit:
     build:
       context: ./streamlit
@@ -153,9 +163,101 @@ services:
       - OLLAMA_URL=http://ollama:11434
       - OLLAMA_MODEL=qwen2.5:3b
     restart: unless-stopped
+    networks:
+      - prometheus-net
+
+  prometheus:
+    image: prom/prometheus:v3.2.1
+    container_name: prometheus-server
+    profiles:
+      - monitoring
+    ports:
+      - "9090:9090"
+    volumes:
+      - /home/sumukha/Desktop/IITP-Project/Agentic-ai-devops-automation/terraform/local-docker-stack/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --web.enable-lifecycle
+    networks:
+      - prometheus-net
+    restart: unless-stopped
+
+  node-exporter:
+    image: prom/node-exporter:v1.8.2
+    container_name: node-exporter
+    profiles:
+      - monitoring
+    ports:
+      - "9100:9100"
+    command:
+      - --path.rootfs=/host
+    volumes:
+      - /:/host:ro,rslave
+    networks:
+      - prometheus-net
+    restart: unless-stopped
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:v0.49.1
+    container_name: cadvisor
+    profiles:
+      - monitoring
+    ports:
+      - "8081:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - prometheus-net
+    restart: unless-stopped
+
+  ollama-exporter:
+    build:
+      context: .
+      dockerfile: observability/ollama-exporter.Dockerfile
+    container_name: ollama-exporter
+    profiles:
+      - monitoring
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+    ports:
+      - "9108:9108"
+    depends_on:
+      - ollama
+    networks:
+      - prometheus-net
+    restart: unless-stopped
+
+  promtail:
+    image: grafana/promtail:3.3.2
+    container_name: promtail
+    profiles:
+      - monitoring
+    ports:
+      - "9080:9080"
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ${PROJECT_DIR:-.}/terraform/kubernetes-grafana-stack/promtail-config.yml:/etc/promtail/config.yml:ro
+    command: -config.file=/etc/promtail/config.yml
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - prometheus-net
+    restart: unless-stopped
 
 volumes:
   jenkins_data:
   ollama_data:
   agent:
   fastapi:
+  prometheus_data:
+
+networks:
+  prometheus-net:
+    name: prometheus-net
+    external: true

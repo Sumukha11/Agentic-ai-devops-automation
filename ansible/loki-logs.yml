@@ -1,0 +1,39 @@
+- name: Deploy Loki log collection
+  hosts: local
+  gather_facts: false
+  vars:
+    project_dir: "{{ playbook_dir | dirname }}"
+  tasks:
+    - name: Apply Loki and Grafana Loki datasources
+      ansible.builtin.shell: |
+        set -e
+        docker exec -i devops-grafana-control-plane kubectl --kubeconfig=/etc/kubernetes/admin.conf apply --validate=false -f - < "{{ project_dir }}/terraform/kubernetes-grafana-stack/loki.yaml"
+        docker exec devops-grafana-control-plane kubectl --kubeconfig=/etc/kubernetes/admin.conf -n monitoring rollout status deployment/loki --timeout=180s
+        docker exec devops-grafana-control-plane kubectl --kubeconfig=/etc/kubernetes/admin.conf -n monitoring rollout status deployment/loki-gateway --timeout=180s
+      changed_when: true
+
+    - name: Start Docker log collector
+      ansible.builtin.shell: |
+        set -e
+        if docker ps --format '{{"{{"}}.Names{{"}}"}}' | grep -qx "promtail"; then
+          exit 0
+        fi
+
+        if docker ps -a --format '{{"{{"}}.Names{{"}}"}}' | grep -qx "promtail"; then
+          docker start promtail
+          exit 0
+        fi
+
+        docker compose --profile monitoring -f "{{ project_dir }}/docker-compose.yml" up -d promtail
+      changed_when: true
+
+    - name: Wait for Loki
+      ansible.builtin.uri:
+        url: http://host.docker.internal:3100/ready
+        status_code: 200
+      retries: 60
+      delay: 2
+
+    - name: Print Loki URL
+      ansible.builtin.debug:
+        msg: "Loki is ready at http://localhost:3100 and collects Docker container logs"

@@ -16,10 +16,14 @@ RUN apt-get update && \
     curl -fsSLo /tmp/docker.tgz https://download.docker.com/linux/static/stable/x86_64/docker-27.3.1.tgz && \
     tar xzf /tmp/docker.tgz --strip-components=1 -C /usr/local/bin && \
     rm -f /tmp/docker.tgz && \
+    mkdir -p /usr/local/lib/docker/cli-plugins && \
+    curl -fsSLo /usr/local/lib/docker/cli-plugins/docker-compose https://github.com/docker/compose/releases/download/v2.30.3/docker-compose-linux-x86_64 && \
+    cp /usr/local/lib/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose && \
+    chmod +x /usr/local/lib/docker/cli-plugins/docker-compose /usr/local/bin/docker-compose && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 COPY adk_agent/requirements.txt .
-RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt ansible-core
 
 # Copy wait script
 COPY adk_agent/wait-for-ollama-ready.sh /app/wait-for-ollama-ready.sh

@@ -1,0 +1,28 @@
+- name: Provision Grafana resource monitoring dashboard
+  hosts: local
+  gather_facts: false
+  vars:
+    project_dir: "{{ playbook_dir | dirname }}"
+  tasks:
+    - name: Check Kind cluster
+      ansible.builtin.command: kind get clusters
+      changed_when: false
+
+    - name: Apply Grafana datasources and dashboard
+      ansible.builtin.shell: |
+        set -e
+        docker exec -i devops-grafana-control-plane kubectl --kubeconfig=/etc/kubernetes/admin.conf apply --validate=false -f - < "{{ project_dir }}/terraform/kubernetes-grafana-stack/grafana.yaml"
+        docker exec -i devops-grafana-control-plane kubectl --kubeconfig=/etc/kubernetes/admin.conf apply --validate=false -f - < "{{ project_dir }}/terraform/kubernetes-grafana-stack/grafana-dashboard.yaml"
+        docker exec devops-grafana-control-plane kubectl --kubeconfig=/etc/kubernetes/admin.conf -n monitoring rollout status deployment/grafana --timeout=600s
+      changed_when: true
+
+    - name: Wait for Grafana
+      ansible.builtin.uri:
+        url: http://host.docker.internal:3000/api/health
+        status_code: 200
+      retries: 60
+      delay: 2
+
+    - name: Print dashboard URL
+      ansible.builtin.debug:
+        msg: "Grafana is ready at http://localhost:3000/d/devops-resources/devops-resource-monitoring"
